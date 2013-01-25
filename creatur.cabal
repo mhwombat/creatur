@@ -1,5 +1,5 @@
 Name:              creatur
-Version:           2.0.10
+Version:           2.0.11
 Stability:         experimental
 Synopsis:          Framework for artificial life experiments.
 Description:       A software framework for automating experiments
@@ -9,14 +9,11 @@ Description:       A software framework for automating experiments
                    its turn to use the CPU. You can use other 
                    applications on the computer at the same time
                    without fear of interfering with experiments; they
-                   will run normally, just more slowly. See the package
-                   creatur-examples for examples on how to use the
+                   will run normally, just more slowly. See the 
+                   tutorial at 
+                   <https://github.com/mhwombat/creatur-examples/raw/master/Tutorial.pdf>
+                   for examples on how to use the
                    Créatúr framework.
-                   .
-                   One of the species included is called the "Wain".
-                   Wains have sufficient intelligence to discover 
-                   patterns in data and make survival decisions based
-                   on those patterns.
                    .
                    About the name: \"Créatúr\" (pronounced kray-toor)
                    is an irish word meaning animal, creature, or an 
@@ -25,13 +22,14 @@ Category:          AI
 License:           BSD3
 License-file:      LICENSE
 Copyright:         (c) Amy de Buitléir 2010-2012
+Homepage:          https://github.com/mhwombat/creatur
 Author:            Amy de Buitléir
 Maintainer:        amy@nualeargais.ie
 Build-Type:        Simple
 Cabal-Version:     >=1.8
 
 library
-  GHC-Options:      -Wall -Werror
+  GHC-Options:      -Wall
   Hs-source-dirs:   src
   exposed-modules:  ALife.Creatur,
                     ALife.Creatur.AgentNamer,
@@ -75,7 +73,7 @@ library
 Test-suite creatur-tests
   Type:             exitcode-stdio-1.0
   Main-is:          Main.hs
-  GHC-Options:      -Wall -Werror
+  GHC-Options:      -Wall
   Hs-source-dirs:   test
   Build-Depends:    
                     array ==0.4.*,
