@@ -1,6 +1,6 @@
 ------------------------------------------------------------------------
 -- |
--- Module      :  ALife.Creatur.Tools.Logger
+-- Module      :  ALife.Creatur.Clock
 -- Copyright   :  (c) Amy de Buitléir 2012-2013
 -- License     :  BSD-style
 -- Maintainer  :  amy@nualeargais.ie
@@ -17,7 +17,6 @@
 -- CPU performance can still be meaningfully compared.
 --
 ------------------------------------------------------------------------
-{-# LANGUAGE UnicodeSyntax #-}
 module ALife.Creatur.Clock
   (
     Clock(..)
@@ -35,7 +34,7 @@ import Control.Monad.State (StateT)
 --   processes which might be using the CPU at the same time.
 class Clock c where
   -- | The current time, measured in "ticks"
-  currentTime ∷ StateT c IO Time
+  currentTime :: StateT c IO Time
   -- | Advance the clock to the next "tick".
-  incTime ∷ StateT c IO ()
+  incTime :: StateT c IO ()
 

@@ -7,10 +7,10 @@
 -- Stability   :  experimental
 -- Portability :  portable
 --
--- Definitions use throughout the Créatúr framework.
+-- Definitions used throughout the Créatúr framework.
 --
 ------------------------------------------------------------------------
-{-# LANGUAGE UnicodeSyntax, TypeFamilies, FlexibleContexts #-}
+{-# LANGUAGE TypeFamilies, FlexibleContexts #-}
 
 module ALife.Creatur
  (
@@ -30,8 +30,8 @@ type AgentId = String
 class Agent a where
 
   -- | Returns the agent ID.
-  agentId ∷ a → AgentId
+  agentId :: a -> AgentId
 
   -- | Returns True if the agent is alive, false otherwise.
-  isAlive ∷ a → Bool
+  isAlive :: a -> Bool
 

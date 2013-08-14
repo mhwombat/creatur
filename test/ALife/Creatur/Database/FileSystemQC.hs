@@ -1,4 +1,16 @@
-{-# LANGUAGE UnicodeSyntax, DeriveGeneric #-}
+------------------------------------------------------------------------
+-- |
+-- Module      :  ALife.Creatur.Database.FileSystemQC
+-- Copyright   :  (c) Amy de Buitléir 2012-2013
+-- License     :  BSD-style
+-- Maintainer  :  amy@nualeargais.ie
+-- Stability   :  experimental
+-- Portability :  portable
+--
+-- QuickCheck tests.
+--
+------------------------------------------------------------------------
+{-# LANGUAGE DeriveGeneric #-}
 
 module ALife.Creatur.Database.FileSystemQC
   (
@@ -24,18 +36,18 @@ instance Record TestRecord where
 
 instance Serialize TestRecord
 
-tryStoreLookup ∷ FilePath → IO ()
+tryStoreLookup :: FilePath -> IO ()
 tryStoreLookup dir = do
   let db = mkFSDatabase dir
   let record = TestRecord "alpha" 7
-  db' ← execStateT (store record) db
-  Right record' ← evalStateT (lookup (key record)) db'
+  db' <- execStateT (store record) db
+  Right record' <- evalStateT (lookup (key record)) db'
   assertEqual "wombat" record record'
 
-testStoreLookup ∷ IO ()
+testStoreLookup :: IO ()
 testStoreLookup = withSystemTempDirectory "creaturTest.tmp" tryStoreLookup
 
-test ∷ TF.Test
+test :: TF.Test
 test = testGroup "HUnit ALife.Creatur.Database.FileSystemQC"
   [
     testCase "store and lookup"

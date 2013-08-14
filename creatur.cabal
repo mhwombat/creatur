@@ -1,5 +1,5 @@
 Name:              creatur
-Version:           2.0.11
+Version:           3.0.0
 Stability:         experimental
 Synopsis:          Framework for artificial life experiments.
 Description:       A software framework for automating experiments
@@ -29,7 +29,7 @@ Build-Type:        Simple
 Cabal-Version:     >=1.8
 
 library
-  GHC-Options:      -Wall
+  GHC-Options:      -Wall -fno-warn-orphans
   Hs-source-dirs:   src
   exposed-modules:  ALife.Creatur,
                     ALife.Creatur.AgentNamer,
@@ -39,8 +39,9 @@ library
                     ALife.Creatur.Database,
                     ALife.Creatur.Database.FileSystem,
                     ALife.Creatur.Genetics.Code,
-                    ALife.Creatur.Genetics.CodeInternal,
-                    ALife.Creatur.Genetics.Gene,
+                    ALife.Creatur.Genetics.BRGCBool,
+                    ALife.Creatur.Genetics.BRGCWord8,
+                    ALife.Creatur.Genetics.Diploid,
                     ALife.Creatur.Genetics.Recombination,
                     ALife.Creatur.Genetics.Reproduction.Asexual,
                     ALife.Creatur.Genetics.Reproduction.Sexual,
@@ -51,20 +52,19 @@ library
   Build-Depends:    
                     array ==0.4.*,
                     base ==4.*,
-                    base-unicode-symbols ==0.2.*,
-                    bytestring ==0.9.*,
+                    bytestring ==0.10.*,
                     cereal ==0.3.*,
                     directory ==1.2.*,
                     gray-extended ==1.*,
                     hdaemonize ==0.4.*,
                     hmatrix ==0.14.*,
-                    lens ==3.7.*,
+                    lens ==3.8.*,
                     MonadRandom ==0.1.*,
                     mtl ==2.1.*,
                     old-locale ==1.0.*,
                     process ==1.1.*,
                     random ==1.0.*,
-                    split ==0.2.1.*,
+                    split ==0.2.*,
                     time ==1.4.*,
                     transformers ==0.3.*,
                     unix ==2.6.*,
@@ -78,22 +78,22 @@ Test-suite creatur-tests
   Build-Depends:    
                     array ==0.4.*,
                     base ==4.*,
-                    base-unicode-symbols ==0.2.*,
                     binary == 0.5.*,
                     cereal ==0.3.*,
                     creatur,
-                    ghc-prim ==0.2.*,
                     hmatrix ==0.14.*,
                     HUnit ==1.2.*,
                     MonadRandom ==0.1.*,
                     mtl ==2.1.*,
                     temporary ==1.1.*,
-                    test-framework ==0.6.*,
+                    test-framework ==0.8.*,
                     test-framework-hunit ==0.3.*,
-                    test-framework-quickcheck2 ==0.2.*,
-                    QuickCheck >= 2.5
+                    test-framework-quickcheck2 ==0.3.*,
+                    QuickCheck ==2.5.*
   Other-modules:    ALife.Creatur.UtilQC
                     ALife.Creatur.Database.FileSystemQC
                     ALife.Creatur.Genetics.CodeQC
-                    ALife.Creatur.Genetics.CrossoverQC
-
+                    ALife.Creatur.Genetics.DiploidQC,
+                    ALife.Creatur.Genetics.BRGCBoolQC
+                    ALife.Creatur.Genetics.BRGCWord8QC
+                    ALife.Creatur.Genetics.RecombinationQC

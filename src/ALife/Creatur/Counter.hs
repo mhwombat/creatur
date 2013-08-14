@@ -1,6 +1,6 @@
 ------------------------------------------------------------------------
 -- |
--- Module      :  ALife.Creatur.Tools.Logger
+-- Module      :  ALife.Creatur.Counter
 -- Copyright   :  (c) Amy de Buitléir 2012-2013
 -- License     :  BSD-style
 -- Maintainer  :  amy@nualeargais.ie
@@ -10,7 +10,6 @@
 -- A simple counter which persists between runs.
 --
 ------------------------------------------------------------------------
-{-# LANGUAGE UnicodeSyntax #-}
 module ALife.Creatur.Counter
   (
     Counter(..),
@@ -25,17 +24,17 @@ import Control.Monad.State (StateT, get, gets, modify, put)
 import System.Directory (doesFileExist)
 
 class Counter c where
-  current ∷ StateT c IO Int
-  increment ∷ StateT c IO ()
+  current :: StateT c IO Int
+  increment :: StateT c IO ()
 
 data PersistentCounter = PersistentCounter {
-    initialised ∷ Bool,
-    time ∷ Int,
-    filename ∷ FilePath
+    initialised :: Bool,
+    time :: Int,
+    filename :: FilePath
   } deriving Show
 
 -- | Creates a counter that will store its value in the specified file.
-mkPersistentCounter ∷ FilePath → PersistentCounter
+mkPersistentCounter :: FilePath -> PersistentCounter
 mkPersistentCounter = PersistentCounter False (-1)
 
 instance Counter PersistentCounter where
@@ -43,27 +42,27 @@ instance Counter PersistentCounter where
     initIfNeeded
     gets time
   increment = do
-    t ← current
+    t <- current
     let t' = t + 1
-    f ← gets filename
-    modify (\c → c { time=t' })
+    f <- gets filename
+    modify (\c -> c { time=t' })
     liftIO $ writeFile f $ show t'
 
-initIfNeeded ∷ StateT PersistentCounter IO ()
+initIfNeeded :: StateT PersistentCounter IO ()
 initIfNeeded = do
-  isInitialised ← gets initialised
+  isInitialised <- gets initialised
   unless isInitialised $ do
-    counter ← get
-    counter' ← liftIO $ initialise counter
+    counter <- get
+    counter' <- liftIO $ initialise counter
     put counter'
 
-initialise ∷ PersistentCounter → IO PersistentCounter
+initialise :: PersistentCounter -> IO PersistentCounter
 initialise counter = do
   let f = filename counter
-  fExists ← doesFileExist f
+  fExists <- doesFileExist f
   if fExists
     then do
-      s ← readFile f
+      s <- readFile f
       return $ counter { initialised=True, time=read s }
     else return $ counter { initialised=True, time=0 }
 
