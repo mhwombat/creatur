@@ -20,15 +20,15 @@ module ALife.Creatur.Logger
     mkSimpleRotatingLogger
   ) where
 
+import ALife.Creatur.Util (modifyLift, getLift)
 import Control.Monad (when, unless)
-import Control.Monad.IO.Class (liftIO)
-import Control.Monad.State (StateT, get, gets, put)
+import Control.Monad.State (StateT, gets)
 import Data.Time (formatTime, getZonedTime)
 import System.Directory (createDirectoryIfMissing, doesFileExist, renameFile)
 import System.Locale (defaultTimeLocale)
 
 class Logger l where
-  -- | @'write' msg@ formats and writes a new log message.
+  -- | @'writeToLog' msg@ formats and writes a new log message.
   writeToLog :: String -> StateT l IO ()
 
 -- | A rotating logger.
@@ -55,18 +55,13 @@ mkSimpleRotatingLogger d pre n = SimpleRotatingLogger False d fLog fExp n (-1)
 instance Logger SimpleRotatingLogger where
   writeToLog msg = do
     initIfNeeded
-    logger <- get
-    logger' <- liftIO $ bumpRecordCount logger
-    put logger'
-    liftIO $ write' logger' msg
+    modifyLift bumpRecordCount
+    getLift $ write' msg
 
 initIfNeeded :: StateT SimpleRotatingLogger IO ()
 initIfNeeded = do
   isInitialised <- gets initialised
-  unless isInitialised $ do
-    logger <- get
-    logger' <- liftIO $ initialise logger
-    put logger'
+  unless isInitialised $ modifyLift initialise
 
 initialise :: SimpleRotatingLogger -> IO SimpleRotatingLogger
 initialise logger = do
@@ -79,8 +74,8 @@ initialise logger = do
       return $ logger { initialised=True, recordCount=read s}
     else return $ logger { initialised=True, recordCount=0}
 
-write' :: SimpleRotatingLogger -> String -> IO ()
-write' logger msg = do
+write' :: String -> SimpleRotatingLogger -> IO ()
+write' msg logger = do
   timestamp <-
       fmap (formatTime defaultTimeLocale "%y%m%d%H%M%S%z") getZonedTime
   appendFile (logFilename logger)
@@ -89,12 +84,12 @@ write' logger msg = do
 bumpRecordCount :: SimpleRotatingLogger -> IO SimpleRotatingLogger
 bumpRecordCount logger = do
   let n = 1 + recordCount logger
-  when (0 == n `mod` maxRecordsPerFile logger) $ liftIO $ rotateLog logger
+  when (0 == n `mod` maxRecordsPerFile logger) $ rotateLog logger
   writeFile (expFilename logger) (show n)
   return logger{ recordCount=n }
 
 rotateLog :: SimpleRotatingLogger -> IO ()
 rotateLog logger = do
   let f = logFilename logger
-  renameFile f $ f ++ '.' : (show . recordCount) logger
+  renameFile f $ f ++ '.' : (show . recordCount $ logger)
 

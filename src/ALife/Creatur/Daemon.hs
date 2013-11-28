@@ -21,8 +21,9 @@ module ALife.Creatur.Daemon
 
 import Control.Concurrent (MVar, newMVar, readMVar, swapMVar, 
   threadDelay)
-import Control.Exception (SomeException, handle)
+import Control.Exception (SomeException, handle, catch)
 import Control.Monad.State (StateT, execStateT)
+import System.IO (hPutStr, stderr)
 import System.IO.Unsafe (unsafePerformIO)
 import System.Posix.Daemonize (CreateDaemon(..), serviced, simpleDaemon)
 import System.Posix.Signals (Handler(Catch), fullSignalSet, 
@@ -68,7 +69,7 @@ daemonMain :: Daemon s -> s -> () -> IO ()
 daemonMain d s _ = do
   s' <- onStartup d s
   _ <- installHandler sigTERM (Catch handleTERM) (Just fullSignalSet)
-  _ <- daemonMainLoop d s'
+  _ <- wrap (daemonMainLoop d s')
   return ()
 
 daemonMainLoop :: Daemon s -> s -> IO ()
@@ -80,6 +81,13 @@ daemonMainLoop d s = do
     else do
       s' <- handle (onException d s) $ execStateT (task d) s
       daemonMainLoop d s'
+
+wrap :: IO () -> IO ()
+wrap t = catch t
+  (\e -> do
+     let err = show (e :: SomeException)
+     hPutStr stderr ("Warning: " ++ err)
+     return ())
 
 handleTERM :: IO ()
 handleTERM = do

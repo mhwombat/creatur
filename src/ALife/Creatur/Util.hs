@@ -30,13 +30,17 @@ module ALife.Creatur.Util
     boolsToBits,
     showBin,
     -- * Monads
-    stateMap
+    stateMap,
+    fromEither,
+    catEithers,
+    modifyLift,
+    getLift
 --    constrain,
   ) where
 
 import Control.Monad (forM_, liftM)
 import Control.Monad.Random (Rand, RandomGen, getRandomRs)
-import Control.Monad.State (StateT(..))
+import Control.Monad.State (StateT(..), get, lift, put)
 import Data.Array.ST (runSTArray)
 import Data.Char (intToDigit)
 import Data.List.Split (chunksOf)
@@ -168,6 +172,46 @@ reverseLookup value ((x,y):xys)
 
 stateMap :: Monad m => (s -> t) -> (t -> s) -> StateT s m a -> StateT t m a
 stateMap f g (StateT h) = StateT $ liftM (fmap f) . h . g
+
+-- | The 'fromEither' function takes a default value and an 'Either'
+--   value.  If the 'Either' is 'Left', it returns the default value;
+--   otherwise, it returns the value contained in the 'Right'.
+fromEither     :: a -> Either e a -> a
+fromEither d x = case x of {Left _ -> d; Right v  -> v}
+
+-- | The 'catEithers' function takes a list of 'Either's and returns
+--   a list of all the 'Right' values. 
+catEithers              :: [Either e a] -> [a]
+catEithers ls = [x | Right x <- ls]
+
+-- | Like modify, but the function that maps the old state to the
+--   new state operates in the inner monad.
+--   For example,
+--   
+--   > s <- get
+--   > s' = lift $ f s
+--   > put s'
+--   
+--   can be replaced with
+--   
+--   > modifyLift f
+modifyLift :: Monad m => (s -> m s) -> StateT s m ()
+modifyLift f = get >>= lift . f >>= put
+
+-- | Invoke a function in the inner monad, and pass the state as
+--   a parameter.
+--   Similar to modifyLift, but the function being invoked doesn't
+--   have a return value, so the state is not modified.
+--   For example,
+--   
+--   > s <- get
+--   > s' = lift $ f s
+--   
+--   can be replaced with
+--   
+--   > getLift f
+getLift :: Monad m => (s -> m ()) -> StateT s m ()
+getLift f = get >>= lift . f >> return ()
 
 rotate :: [a] -> [a]
 rotate [] = []

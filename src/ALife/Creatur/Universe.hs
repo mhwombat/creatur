@@ -10,8 +10,8 @@
 -- Provides a habitat for artificial life.
 --
 ------------------------------------------------------------------------
-{-# LANGUAGE TemplateHaskell, TypeFamilies, FlexibleContexts #-}
-
+{-# LANGUAGE TemplateHaskell, TypeFamilies, FlexibleContexts,
+    UndecidableInstances #-}
 module ALife.Creatur.Universe
  (
     Universe(..),
@@ -23,9 +23,15 @@ module ALife.Creatur.Universe
     multiLookup,
     extra,
     agentIds,
+    getAgent,
+    archivedAgentIds,
+    getAgentFromArchive,
     addAgent,
-    storeOrArchive
+    storeOrArchive,
+    archiveAgent
  ) where
+
+import Prelude hiding (lookup)
 
 import ALife.Creatur (Agent, AgentId, agentId, isAlive)
 import ALife.Creatur.AgentNamer (AgentNamer, SimpleAgentNamer, 
@@ -34,7 +40,7 @@ import qualified ALife.Creatur.AgentNamer as N (genName)
 import ALife.Creatur.Clock (Clock, currentTime, incTime)
 import ALife.Creatur.Counter (PersistentCounter, mkPersistentCounter)
 import ALife.Creatur.Database as D (Database, DBRecord, Record,
-  delete, keys, lookup, store)
+  delete, key, keys, archivedKeys, lookup, lookupInArchive, store)
 import ALife.Creatur.Database.FileSystem (FSDatabase, mkFSDatabase)
 import ALife.Creatur.Logger (Logger, SimpleRotatingLogger, 
   mkSimpleRotatingLogger, writeToLog)
@@ -64,11 +70,34 @@ instance Clock c => Clock (Universe c l d n x a) where
   currentTime = zoom clock currentTime
   incTime = zoom clock incTime
 
+-- instance (Database d, DBRecord d ~ DBRecord (Universe c l d n x a)) =>
+--     Database (Universe c l d n x a) where
+--   type DBRecord (Universe c l d n x a) = a
+--   keys = zoom agentDB keys
+--   archivedKeys = zoom agentDB archivedKeys
+--   lookup = zoom agentDB . lookup
+--   lookupInArchive = zoom agentDB . lookupInArchive
+--   store = zoom agentDB . store
+--   delete = zoom agentDB . delete
+
 instance AgentNamer n => AgentNamer (Universe c l d n x a) where
   genName = zoom namer N.genName
 
 agentIds :: Database d => StateT (Universe c l d n x a) IO [String]
 agentIds = zoom agentDB keys
+
+archivedAgentIds :: Database d => StateT (Universe c l d n x a) IO [String]
+archivedAgentIds = zoom agentDB archivedKeys
+
+getAgent
+  :: (Serialize a, Database d, a ~ DBRecord d)
+    => String -> StateT (Universe c l d n x a) IO (Either String a)
+getAgent = zoom agentDB . lookup
+
+getAgentFromArchive
+  :: (Serialize a, Database d, a ~ DBRecord d)
+    => String -> StateT (Universe c l d n x a) IO (Either String a)
+getAgentFromArchive = zoom agentDB . lookupInArchive
 
 multiLookup :: (Serialize a, Database d, Record a, a ~ DBRecord d) => 
   [AgentId] -> StateT d IO (Either String [DBRecord d])
@@ -88,7 +117,11 @@ storeOrArchive a = do
 
 addAgent :: (Serialize a, Database d, Record a, a ~ DBRecord d) =>
      DBRecord d -> StateT (Universe c l d n x a) IO ()
-addAgent a = zoom agentDB (store a)
+addAgent = zoom agentDB . store
+
+archiveAgent :: (Serialize a, Database d, Record a, a ~ DBRecord d) =>
+     DBRecord d -> StateT (Universe c l d n x a) IO ()
+archiveAgent = zoom agentDB . delete . D.key
 
 type SimpleUniverse a = 
   Universe PersistentCounter SimpleRotatingLogger (FSDatabase a)

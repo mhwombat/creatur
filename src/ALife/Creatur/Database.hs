@@ -27,10 +27,16 @@ class Record r where
 -- | A database offering storage and retrieval for records.
 class Database d where
   type DBRecord d
-  -- | Get a list of all keys in the database.
+  -- | Get a list of all active keys in the database.
   keys :: StateT d IO [String]
-  -- | Read a record from the database.
+  -- | Get a list of all archived keys in the database. If the database
+  --   does not implement archiving, it may return an empty list.
+  archivedKeys :: StateT d IO [String]
+  -- | Read an active record from the database.
   lookup :: Serialize (DBRecord d) => 
+    String -> StateT d IO (Either String (DBRecord d))
+  -- | Read an archived record from the database.
+  lookupInArchive :: Serialize (DBRecord d) => 
     String -> StateT d IO (Either String (DBRecord d))
   -- | Write a record to the database. 
   --   If an agent with the same name already exists, it will be overwritten.

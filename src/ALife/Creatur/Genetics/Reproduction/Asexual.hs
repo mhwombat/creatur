@@ -46,7 +46,7 @@ class Reproductive a where
 
   -- | Builds an agent based on the genome provided, if it is possible
   --   to do so.
-  build :: AgentId -> Base a -> Maybe a
+  build :: AgentId -> Base a -> Either [String] a
 
   -- | @'makeOffspring' (parent1, parent2) name@ uses the genetic
   --   information from @parent1@ and @parent2@ to produce a child with
@@ -55,7 +55,9 @@ class Reproductive a where
   --   1. Calls @'recombine'@ to create a genome for the child.
   --
   --   2. Calls @'build'@ to construct a child with this genome.
-  makeOffspring :: RandomGen r => a -> a -> AgentId -> Rand r (Maybe a)
+  makeOffspring
+    :: RandomGen r
+      => a -> a -> AgentId -> Rand r (Either [String] a)
   makeOffspring a b name = do
     g <- recombine a b
     return $ build name g

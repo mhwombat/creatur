@@ -45,6 +45,7 @@ module ALife.Creatur.Genetics.BRGCBool
 
 import Prelude hiding (read)
 import ALife.Creatur.Genetics.Diploid (Diploid, express)
+import ALife.Creatur.Util (fromEither)
 import Codec.Gray (integralToGray, grayToIntegral)
 import Control.Applicative ((<$>), (<*>))
 import Control.Monad (replicateM)
@@ -52,7 +53,6 @@ import Control.Monad.State.Lazy (StateT, runState, execState, evalState)
 import qualified Control.Monad.State.Lazy as S (put, get, gets)
 import Data.Char (ord, chr, intToDigit)
 import Data.Functor.Identity (Identity)
-import Data.Maybe (fromMaybe)
 import Data.Word (Word8, Word16)
 import GHC.Generics
 import Numeric (showIntAtBase)
@@ -69,7 +69,7 @@ runWriter w = execState w []
 
 type Reader = StateT (Sequence, Int) Identity
 
-read :: Genetic g => Sequence -> Maybe g
+read :: Genetic g => Sequence -> Either [String] g
 read s = evalState get (s, 0)
 
 runReader :: Reader g -> Sequence -> g
@@ -99,24 +99,24 @@ class Genetic g where
   put = gput . from
 
   -- | Reads the next gene in a sequence.
-  get :: Reader (Maybe g)
+  get :: Reader (Either [String] g)
 
-  default get :: (Generic g, GGenetic (Rep g)) => Reader (Maybe g)
+  default get :: (Generic g, GGenetic (Rep g)) => Reader (Either [String] g)
   get = do
     a <- gget
     return . fmap to $ a
 
   getWithDefault :: g -> Reader g
-  getWithDefault d = fmap (fromMaybe d) get
+  getWithDefault d = fmap (fromEither d) get
 
 class GGenetic f where
   gput :: f a -> Writer ()
-  gget :: Reader (Maybe (f a))
+  gget :: Reader (Either [String] (f a))
 
 -- | Unit: used for constructors without arguments
 instance GGenetic U1 where
   gput U1 = return ()
-  gget = return (Just U1)
+  gget = return (Right U1)
 
 -- | Constants, additional parameters and recursion of kind *
 instance (GGenetic a, GGenetic b) => GGenetic (a :*: b) where
@@ -132,9 +132,10 @@ instance (GGenetic a, GGenetic b) => GGenetic (a :+: b) where
   gput (R1 x) = put False >> gput x
   gget = do
     a <- get
-    if a == Just True
-       then fmap (fmap L1) gget
-       else fmap (fmap R1) gget
+    case a of
+      Right True  -> fmap (fmap L1) gget
+      Right False -> fmap (fmap R1) gget
+      Left s -> return (Left s)
 
 -- | Sums: encode choice between constructors
 instance (GGenetic a) => GGenetic (M1 i c a) where
@@ -160,11 +161,11 @@ instance Genetic Bool where
     (xs, i) <- S.get
     let xs' = drop i xs
     if null xs'
-       then return Nothing
+       then return $ Left ["End of sequence"]
        else do
          let x = head xs'
          S.put (xs, i+1)
-         return $ Just x
+         return $ Right x
 
 instance Genetic Char where
   put = putRawBoolArray . intToBools 8 . ord
@@ -184,6 +185,11 @@ instance (Genetic a) => Genetic [a]
 
 instance (Genetic a) => Genetic (Maybe a)
 
+instance (Genetic a, Genetic b) => Genetic (a, b)
+
+instance (Genetic a, Genetic b) => Genetic (Either a b)
+
+
 --
 -- Utilities
 --
@@ -192,7 +198,7 @@ instance (Genetic a) => Genetic (Maybe a)
 putRawBoolArray :: [Bool] -> Writer ()
 putRawBoolArray = mapM_ put
 
-getRawBoolArray :: Int -> Reader (Maybe [Bool])
+getRawBoolArray :: Int -> Reader (Either [String] [Bool])
 getRawBoolArray n = do
   xs <- replicateM n get
   return . sequence $ xs
@@ -216,7 +222,7 @@ type DiploidSequence = (Sequence, Sequence)
 
 type DiploidReader = StateT ((Sequence, Int), (Sequence, Int)) Identity
 
-readAndExpress :: (Genetic g, Diploid g) => DiploidSequence -> Maybe g
+readAndExpress :: (Genetic g, Diploid g) => DiploidSequence -> Either [String] g
 readAndExpress (s1, s2) = evalState getAndExpress ((s1, 0), (s2, 0))
 
 runDiploidReader :: DiploidReader g -> DiploidSequence -> g
@@ -242,19 +248,23 @@ consumed2 = do
 --   information, and return the resulting gene (after taking
 --   into account any dominance relationship) and the remaining
 --   (unread) portion of the two nucleotide strands.
-getAndExpress :: (Genetic g, Diploid g) => DiploidReader (Maybe g)
+getAndExpress :: (Genetic g, Diploid g) => DiploidReader (Either [String] g)
 getAndExpress = do
   (sa, sb) <- S.get
   let (a, sa') = runState get sa
   let (b, sb') = runState get sb
   S.put (sa', sb')
-  return $ expressMaybe a b
+  return $ expressEither a b
 
 getAndExpressWithDefault :: (Genetic g, Diploid g) => g -> DiploidReader g
-getAndExpressWithDefault d = fmap (fromMaybe d) getAndExpress
+getAndExpressWithDefault d = fmap (fromEither d) getAndExpress
 
-expressMaybe :: Diploid g => Maybe g -> Maybe g -> Maybe g
-expressMaybe (Just a) (Just b) = Just (express a b)
-expressMaybe (Just a) Nothing  = Just a
-expressMaybe Nothing (Just b)  = Just b
-expressMaybe Nothing Nothing   = Nothing
+expressEither
+  :: Diploid g
+    => Either [String] g -> Either [String] g
+      -> Either [String] g
+expressEither (Right a) (Right b) = Right (express a b)
+expressEither (Right a) (Left _)  = Right a
+expressEither (Left _)  (Right b) = Right b
+expressEither (Left xs) (Left ys) =
+  Left $ (map ("sequence 1: " ++) xs) ++ (map ("sequence 2: " ++) ys)

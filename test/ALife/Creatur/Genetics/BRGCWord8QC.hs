@@ -18,6 +18,7 @@ module ALife.Creatur.Genetics.BRGCWord8QC
 
 import Prelude hiding (read)
 import ALife.Creatur.Genetics.BRGCWord8
+import ALife.Creatur.Genetics.Analysis (Analysable)
 import Control.Applicative ((<$>), (<*>))
 import Data.Word (Word8, Word16)
 import GHC.Generics (Generic)
@@ -27,7 +28,7 @@ import Test.QuickCheck (Arbitrary, Gen, Property, arbitrary, choose,
   oneof, property, sized, vectorOf)
 
 prop_round_trippable :: (Eq g, Genetic g) => g -> Property
-prop_round_trippable g = property $ g' == Just g
+prop_round_trippable g = property $ g' == Right g
   where x = write g
         g' = read x
 
@@ -35,6 +36,7 @@ data TestStructure = A | B Bool | C Word8 | D Word16 Char | E [TestStructure]
   deriving (Show, Eq, Generic)
 
 instance Genetic TestStructure
+instance Analysable TestStructure
 
 sizedArbTestStructure :: Int -> Gen TestStructure
 sizedArbTestStructure 0 =
@@ -52,19 +54,19 @@ sizedArbTestStructure n = do
   
 instance Arbitrary TestStructure where
   arbitrary = sized sizedArbTestStructure
-              
+
 test :: Test
 test = testGroup "ALife.Creatur.Genetics.BRGCWord8QC"
   [
-    testProperty "prop_encoding_round_trippable - Bool"
+    testProperty "prop_round_trippable - Bool"
       (prop_round_trippable :: Bool -> Property),
-    testProperty "prop_encoding_round_trippable - Char"
+    testProperty "prop_round_trippable - Char"
       (prop_round_trippable :: Char -> Property),
-    testProperty "prop_encoding_round_trippable - Word8"
+    testProperty "prop_round_trippable - Word8"
       (prop_round_trippable :: Word8 -> Property),
-    testProperty "prop_encoding_round_trippable - Word16"
+    testProperty "prop_round_trippable - Word16"
       (prop_round_trippable :: Word16 -> Property),
-    testProperty "prop_encoding_round_trippable - TestStructure"
+    testProperty "prop_round_trippable - TestStructure"
       (prop_round_trippable :: TestStructure -> Property)
   ]
 

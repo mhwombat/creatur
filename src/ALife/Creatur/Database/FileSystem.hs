@@ -18,12 +18,14 @@ module ALife.Creatur.Database.FileSystem
     mkFSDatabase
   ) where
 
+import Prelude hiding (readFile, writeFile)
+
 import ALife.Creatur.Database (Database(..), DBRecord, Record, 
   delete, key, keys, store)
-import Prelude hiding (readFile, writeFile)
+import ALife.Creatur.Util (modifyLift)
 import Control.Monad (unless, when)
 import Control.Monad.IO.Class (liftIO)
-import Control.Monad.State (StateT, get, gets, put)
+import Control.Monad.State (StateT, gets)
 import Data.ByteString as BS (readFile, writeFile)
 import qualified Data.Serialize as DS 
   (Serialize, decode, encode)
@@ -42,17 +44,13 @@ data FSDatabase r = FSDatabase
 instance Database (FSDatabase r) where
   type DBRecord (FSDatabase r) = r
 
-  keys = do
-    initIfNeeded
-    d <- gets mainDir
-    files <- liftIO $ getDirectoryContents d
-    return $ filter isRecordFileName files
+  keys = keysIn mainDir
 
-  lookup k = do
-    initIfNeeded
-    d <- gets mainDir
-    let f = d ++ '/':k
-    liftIO $ readRecord3 f
+  archivedKeys = keysIn archiveDir
+
+  lookup k = k `lookupIn` mainDir
+
+  lookupInArchive k = k `lookupIn` archiveDir
 
   store r = do
     initIfNeeded
@@ -63,6 +61,25 @@ instance Database (FSDatabase r) where
     fileExists <- liftIO $ doesFileExist name
     when fileExists $ liftIO $ removeFile name
 
+keysIn
+  :: (FSDatabase r -> FilePath) -> StateT (FSDatabase r) IO [String]
+keysIn x = do
+    initIfNeeded
+    d <- gets x
+    files <- liftIO $ getDirectoryContents d
+    return $ filter isRecordFileName files
+
+lookupIn
+  :: DS.Serialize r =>
+     String
+     -> (FSDatabase r -> FilePath)
+     -> StateT (FSDatabase r) IO (Either String r)
+lookupIn k x = do
+    initIfNeeded
+    d <- gets x
+    let f = d ++ '/':k
+    liftIO $ readRecord3 f
+  
 -- | @'mkFSDatabase' d@ (re)creates the FSDatabase in the
 --   directory @d@.
 mkFSDatabase :: FilePath -> FSDatabase r
@@ -71,10 +88,7 @@ mkFSDatabase d = FSDatabase False d (d ++ "/archive")
 initIfNeeded :: StateT (FSDatabase r) IO ()
 initIfNeeded = do
   isInitialised <- gets initialised
-  unless isInitialised $ do
-    u <- get
-    u' <- liftIO $ initialise u
-    put u'
+  unless isInitialised $ modifyLift initialise
 
 initialise :: FSDatabase r -> IO (FSDatabase r)
 initialise u = do

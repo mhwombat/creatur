@@ -18,19 +18,21 @@ module ALife.Creatur.Counter
   ) where
 
 import ALife.Creatur.Clock (Clock, currentTime, incTime)
+import ALife.Creatur.Util (modifyLift, getLift)
 import Control.Monad (unless)
-import Control.Monad.IO.Class (liftIO)
-import Control.Monad.State (StateT, get, gets, modify, put)
+import Control.Monad.State (StateT, gets, modify)
 import System.Directory (doesFileExist)
+import System.IO (hGetContents, withFile, Handle, IOMode(ReadMode))
+import Text.Read (readEither)
 
 class Counter c where
   current :: StateT c IO Int
   increment :: StateT c IO ()
 
 data PersistentCounter = PersistentCounter {
-    initialised :: Bool,
-    time :: Int,
-    filename :: FilePath
+    cInitialised :: Bool,
+    cValue :: Int,
+    cFilename :: FilePath
   } deriving Show
 
 -- | Creates a counter that will store its value in the specified file.
@@ -38,35 +40,39 @@ mkPersistentCounter :: FilePath -> PersistentCounter
 mkPersistentCounter = PersistentCounter False (-1)
 
 instance Counter PersistentCounter where
-  current = do
-    initIfNeeded
-    gets time
+  current = initIfNeeded >> gets cValue
   increment = do
-    t <- current
-    let t' = t + 1
-    f <- gets filename
-    modify (\c -> c { time=t' })
-    liftIO $ writeFile f $ show t'
+    modify (\c -> c { cValue=1 + cValue c })
+    getLift store
 
+store :: PersistentCounter -> IO ()
+store counter = writeFile (cFilename counter) $ show (cValue counter)
+  
 initIfNeeded :: StateT PersistentCounter IO ()
 initIfNeeded = do
-  isInitialised <- gets initialised
-  unless isInitialised $ do
-    counter <- get
-    counter' <- liftIO $ initialise counter
-    put counter'
+  isInitialised <- gets cInitialised
+  unless isInitialised $ modifyLift initialise
 
 initialise :: PersistentCounter -> IO PersistentCounter
 initialise counter = do
-  let f = filename counter
+  let f = cFilename counter
   fExists <- doesFileExist f
   if fExists
     then do
-      s <- readFile f
-      return $ counter { initialised=True, time=read s }
-    else return $ counter { initialised=True, time=0 }
+      x <- withFile f ReadMode readCounter -- closes file ASAP
+      case x of
+        Left msg -> error $ "Unable to read counter from " ++ f ++ ": " ++ msg
+        Right c  -> return $ counter { cInitialised=True, cValue=c }
+    else return $ counter { cInitialised=True, cValue=0 }
 
 instance Clock PersistentCounter where
   currentTime = current
   incTime = increment
 
+readCounter :: Handle -> IO (Either String Int)
+readCounter h = do
+  s <- hGetContents h
+  let x = readEither s :: Either String Int
+  case x of
+    Left msg -> return $ Left (msg ++ "\"" ++ s ++ "\"")
+    Right c  -> return $ Right c

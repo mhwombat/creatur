@@ -96,6 +96,8 @@ instance (Diploid a) => Diploid [a]
 
 instance (Diploid a) => Diploid (Maybe a)
 
+instance (Diploid a, Diploid b) => Diploid (a, b)
+
 -- TODO: Types I might want to define instances for
 -- Bool	 
 -- Char	 
