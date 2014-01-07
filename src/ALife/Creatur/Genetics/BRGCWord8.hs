@@ -218,7 +218,9 @@ getRawWord8 = do
 
 -- | Write a raw sequence of Word8 values to the genome
 putRawWord8s :: [Word8] -> Writer ()
-putRawWord8s = mapM_ putRawWord8
+putRawWord8s ys = do
+  xs <- S.get
+  S.put (xs ++ ys)
 
 -- | Read a raw sequence of Word8 values from the genome
 getRawWord8s :: Int -> Reader (Either [String] [Word8])
