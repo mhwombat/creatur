@@ -20,7 +20,8 @@ module ALife.Creatur.Counter
 import ALife.Creatur.Clock (Clock, currentTime, incTime)
 import ALife.Creatur.Util (modifyLift, getLift)
 import Control.Monad (unless)
-import Control.Monad.State (StateT, gets, modify)
+import Control.Monad.IO.Class (liftIO)
+import Control.Monad.State (StateT, get, gets, modify)
 import System.Directory (doesFileExist)
 import System.IO (hGetContents, withFile, Handle, IOMode(ReadMode))
 import Text.Read (readEither)
@@ -43,7 +44,8 @@ instance Counter PersistentCounter where
   current = initIfNeeded >> gets cValue
   increment = do
     modify (\c -> c { cValue=1 + cValue c })
-    getLift store
+    k <- get
+    liftIO $ store k
 
 store :: PersistentCounter -> IO ()
 store counter = writeFile (cFilename counter) $ show (cValue counter)
@@ -51,7 +53,7 @@ store counter = writeFile (cFilename counter) $ show (cValue counter)
 initIfNeeded :: StateT PersistentCounter IO ()
 initIfNeeded = do
   isInitialised <- gets cInitialised
-  unless isInitialised $ modifyLift initialise
+  unless isInitialised $ modifyLift initialise >> getLift store
 
 initialise :: PersistentCounter -> IO PersistentCounter
 initialise counter = do
@@ -63,7 +65,10 @@ initialise counter = do
       case x of
         Left msg -> error $ "Unable to read counter from " ++ f ++ ": " ++ msg
         Right c  -> return $ counter { cInitialised=True, cValue=c }
-    else return $ counter { cInitialised=True, cValue=0 }
+    else do
+      let k = counter { cInitialised=True, cValue=0 }
+      store k
+      return k
 
 instance Clock PersistentCounter where
   currentTime = current
