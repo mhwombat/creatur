@@ -18,7 +18,7 @@ module ALife.Creatur.Counter
   ) where
 
 import ALife.Creatur.Clock (Clock, currentTime, incTime)
-import ALife.Creatur.Util (modifyLift, getLift)
+import ALife.Creatur.Util (modifyLift)
 import Control.Monad (unless)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.State (StateT, get, gets, modify)
@@ -43,6 +43,7 @@ mkPersistentCounter = PersistentCounter False (-1)
 instance Counter PersistentCounter where
   current = initIfNeeded >> gets cValue
   increment = do
+    initIfNeeded
     modify (\c -> c { cValue=1 + cValue c })
     k <- get
     liftIO $ store k
@@ -53,7 +54,7 @@ store counter = writeFile (cFilename counter) $ show (cValue counter)
 initIfNeeded :: StateT PersistentCounter IO ()
 initIfNeeded = do
   isInitialised <- gets cInitialised
-  unless isInitialised $ modifyLift initialise >> getLift store
+  unless isInitialised $ modifyLift initialise
 
 initialise :: PersistentCounter -> IO PersistentCounter
 initialise counter = do
@@ -67,7 +68,6 @@ initialise counter = do
         Right c  -> return $ counter { cInitialised=True, cValue=c }
     else do
       let k = counter { cInitialised=True, cValue=0 }
-      store k
       return k
 
 instance Clock PersistentCounter where

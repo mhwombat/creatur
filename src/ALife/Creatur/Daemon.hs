@@ -74,7 +74,7 @@ daemonMain d s _ = do
 
 daemonMainLoop :: Daemon s -> s -> IO ()
 daemonMainLoop d s = do
-  threadDelay . sleepTime $ d
+  threadDelay $ sleepTime d
   timeToStop <- readMVar termReceived
   if timeToStop 
     then onShutdown d s

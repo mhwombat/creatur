@@ -91,5 +91,5 @@ bumpRecordCount logger = do
 rotateLog :: SimpleRotatingLogger -> IO ()
 rotateLog logger = do
   let f = logFilename logger
-  renameFile f $ f ++ '.' : (show . recordCount $ logger)
+  renameFile f $ f ++ '.' : (show $ recordCount logger)
 

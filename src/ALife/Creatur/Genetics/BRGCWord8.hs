@@ -106,7 +106,7 @@ class Genetic g where
   default get :: (Generic g, GGenetic (Rep g)) => Reader (Either [String] g)
   get = do
     a <- gget
-    return . fmap to $ a
+    return $ fmap to a
 
   getWithDefault :: g -> Reader g
   getWithDefault d = fmap (fromEither d) get
@@ -151,7 +151,7 @@ instance (Genetic a) => GGenetic (K1 i a) where
   gput (K1 x) = put x
   gget = do
     a <- get
-    return . fmap K1 $ a
+    return $ fmap K1 a
 
 --
 -- Instances

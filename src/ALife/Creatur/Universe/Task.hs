@@ -20,6 +20,8 @@ module ALife.Creatur.Universe.Task
  (
     AgentProgram,
     AgentsProgram,
+    SummaryProgram,
+    noSummary,
     withAgent,
     withAgents,
     runNoninteractingAgents,
@@ -45,6 +47,7 @@ import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Random (evalRandIO)
 import Control.Monad.State (StateT, execStateT)
 import Data.List (unfoldr)
+import Data.Maybe (catMaybes)
 import Data.Serialize (Serialize)
 
 simpleDaemon :: Logger u => Daemon u
@@ -71,36 +74,54 @@ exceptionHandler u x = execStateT (writeToLog ("WARNING: " ++ show x)) u
 
 -- | A program for an agent which doesn't interact with other agents.
 --   The input parameter is the agent whose turn it is to use the CPU.
---   The program must return the agent (which may have been modified).
---   (The universe will then be updated with these changes.)
-type AgentProgram c l d n x a = a -> StateT (Universe c l d n x a) IO a
+--   The program must return the agent (which may have been modified),
+--   along with any data (e.g., statistics) to be used by the summary
+--   program.
+type AgentProgram c l d n x a s
+  = a -> StateT (Universe c l d n x a) IO (a, Maybe s)
+
+-- | A program that processes the outputs from all the agent programs.
+--   For example, this program might aggregate the statistics and
+--   record the result.
+type SummaryProgram c l d n x a s
+  = [s] -> StateT (Universe c l d n x a) IO ()
+
+noSummary :: SummaryProgram c l d n x a s
+noSummary _ = return ()
 
 withAgent :: (Clock c, Logger l, Database d, Agent a, Serialize a, 
     Record a, a ~ DBRecord d) =>
-  AgentProgram c l d n x a -> AgentId -> 
-    StateT (Universe c l d n x a) IO ()
+  AgentProgram c l d n x a s -> AgentId -> 
+    StateT (Universe c l d n x a) IO (Maybe s)
 withAgent program name = 
   (zoom agentDB . D.lookup) name >>= withAgent' program name
 
 withAgent' :: (Clock c, Logger l, Database d, Agent a, Serialize a, 
     Record a, a ~ DBRecord d) =>
-  AgentProgram c l d n x a -> AgentId -> Either String a -> 
-    StateT (Universe c l d n x a) IO ()
-withAgent' _ name (Left msg) = 
+  AgentProgram c l d n x a s -> AgentId -> Either String a -> 
+    StateT (Universe c l d n x a) IO (Maybe s)
+withAgent' _ name (Left msg) = do
   writeToLog $ "Unable to read '" ++ name ++ "': " ++ msg
-withAgent' program _ (Right a) = 
-  program a >>= zoom agentDB . storeOrArchive
+  return Nothing
+withAgent' program _ (Right a) = do
+  (a', s) <- program a
+  zoom agentDB $ storeOrArchive a'
+  return s
 
-runNoninteractingAgents :: (Clock c, Logger l, Database d, Agent a, Serialize a, 
-    Record a, a ~ DBRecord d) =>
-  AgentProgram c l d n x a -> StateT (Universe c l d n x a) IO ()
-runNoninteractingAgents agentProgram = do
+runNoninteractingAgents
+  :: (Clock c, Logger l, Database d, Agent a, Serialize a, Record a,
+    a ~ DBRecord d)
+      => AgentProgram c l d n x a s -> SummaryProgram c l d n x a s
+        -> StateT (Universe c l d n x a) IO ()
+runNoninteractingAgents agentProgram summaryProgram = do
+  writeToLog "Beginning of round"
   xs <- agentIds
   xs' <- liftIO $ evalRandIO $ shuffle xs
-  -- TODO Write out current list so we can pick up where we left off????
-  --      (when (currentTime logger `mod` 1000 == 0) $ logStats universe logger)
-  mapM_ (withAgent agentProgram) xs'
+  writeToLog $ "Lineup: " ++ show xs'
+  ys <- mapM (withAgent agentProgram) xs'
+  summaryProgram $ catMaybes ys
   zoom clock incTime
+  writeToLog "End of round"
 
 -- | A program which allows an agent to interact with one or more of
 --   its neighbours.
@@ -114,36 +135,48 @@ runNoninteractingAgents agentProgram = do
 --   way that guarantees that every possible sequence of agents has an
 --   equal chance of occurring.
 --
---   The program must return a list of agents that it has modified.
---   (The universe will then be updated with these changes.)
+--   The program must return a list of agents that it has modified,
+--   along with any data (e.g., statistics) to be used by the summary
+--   program.
 --   The order of the output list is not important.
-type AgentsProgram c l d n x a = 
-  [a] -> StateT (Universe c l d n x a) IO [a]
+type AgentsProgram c l d n x a s = 
+  [a] -> StateT (Universe c l d n x a) IO ([a], Maybe s)
 
-withAgents :: (Clock c, Logger l, Database d, Agent a, Serialize a, 
-    Record a, a ~ DBRecord d) =>
-  AgentsProgram c l d n x a -> [AgentId] ->
-    StateT (Universe c l d n x a) IO ()
+withAgents
+  :: (Clock c, Logger l, Database d, Agent a, Serialize a, Record a,
+    a ~ DBRecord d)
+     => AgentsProgram c l d n x a s -> [AgentId]
+       -> StateT (Universe c l d n x a) IO (Maybe s)
 withAgents program names = 
   (zoom agentDB . multiLookup) names >>= withAgents' program
 
-withAgents' :: (Clock c, Logger l, Database d, Agent a, Serialize a, 
-  Record a, a ~ DBRecord d) =>
-    AgentsProgram c l d n x a -> Either String [a] ->
-      StateT (Universe c l d n x a) IO ()
-withAgents' _ (Left msg) = 
+withAgents'
+  :: (Clock c, Logger l, Database d, Agent a, Serialize a, 
+    Record a, a ~ DBRecord d)
+     => AgentsProgram c l d n x a s -> Either String [a]
+       -> StateT (Universe c l d n x a) IO (Maybe s)
+withAgents' _ (Left msg) = do
   writeToLog $ "Database error: " ++ msg
-withAgents' program (Right as) = 
-  program as >>= mapM_ (zoom agentDB . storeOrArchive)
+  return Nothing
+withAgents' program (Right as) = do
+  (as', s) <- program as
+  mapM_ (zoom agentDB . storeOrArchive) as'
+  return s
 
-runInteractingAgents :: (Clock c, Logger l, Database d, Agent a, 
-  Serialize a, Record a, a ~ DBRecord d) =>
-    AgentsProgram c l d n x a -> StateT (Universe c l d n x a) IO ()
-runInteractingAgents agentsProgram = do
+runInteractingAgents
+  :: (Clock c, Logger l, Database d, Agent a, Serialize a, Record a,
+    a ~ DBRecord d)
+     => AgentsProgram c l d n x a s -> SummaryProgram c l d n x a s
+       -> StateT (Universe c l d n x a) IO ()
+runInteractingAgents agentsProgram summaryProgram = do
+  writeToLog "Beginning of round"
   xs <- agentIds
   xs' <- liftIO $ evalRandIO $ shuffle xs
-  mapM_ (withAgents agentsProgram) $ makeViews xs'
+  writeToLog $ "Lineup: " ++ show xs'
+  ys <- mapM (withAgents agentsProgram) $ makeViews xs'
+  summaryProgram $ catMaybes ys
   zoom clock incTime
+  writeToLog "End of round"
 
 makeViews :: [a] -> [[a]]
 makeViews as = unfoldr f (0,as)

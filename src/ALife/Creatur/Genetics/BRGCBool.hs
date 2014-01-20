@@ -104,7 +104,7 @@ class Genetic g where
   default get :: (Generic g, GGenetic (Rep g)) => Reader (Either [String] g)
   get = do
     a <- gget
-    return . fmap to $ a
+    return $ fmap to a
 
   getWithDefault :: g -> Reader g
   getWithDefault d = fmap (fromEither d) get
@@ -147,7 +147,7 @@ instance (Genetic a) => GGenetic (K1 i a) where
   gput (K1 x) = put x
   gget = do
     a <- get
-    return . fmap K1 $ a
+    return $ fmap K1 a
 
 --
 -- Instances
@@ -171,7 +171,7 @@ instance Genetic Char where
   put = putRawBoolArray . intToBools 8 . ord
   get = do
     bs <- getRawBoolArray 8
-    return . fmap chr . fmap boolsToInt $ bs
+    return . fmap chr $ fmap boolsToInt bs
 
 instance Genetic Word8 where
   put = putRawBoolArray . intToBools 8 . integralToGray
@@ -201,11 +201,11 @@ putRawBoolArray = mapM_ put
 getRawBoolArray :: Int -> Reader (Either [String] [Bool])
 getRawBoolArray n = do
   xs <- replicateM n get
-  return . sequence $ xs
+  return $ sequence xs
 
 intToBools :: (Integral a, Show a) => Int -> a -> [Bool]
 intToBools nBits x =
-  map (\b -> b == '1') . tail . showIntAtBase 2 intToDigit x' $ ""
+  map (\b -> b == '1') . tail $ showIntAtBase 2 intToDigit x' ""
   where x' = 2^nBits + fromIntegral x :: Int
 
 boolsToInt :: Integral a => [Bool] -> a

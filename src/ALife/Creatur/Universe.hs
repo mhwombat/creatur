@@ -44,14 +44,18 @@ import ALife.Creatur.Database as D (Database, DBRecord, Record,
 import ALife.Creatur.Database.FileSystem (FSDatabase, mkFSDatabase)
 import ALife.Creatur.Logger (Logger, SimpleRotatingLogger, 
   mkSimpleRotatingLogger, writeToLog)
-import Control.Lens (makeLenses, zoom)
+import ALife.Creatur.Util (modifyLift)
+import Control.Lens (makeLenses, zoom, view, set)
 import Control.Monad (unless)
-import Control.Monad.State (StateT)
+import Control.Monad.State (StateT, gets)
 import Data.Either (partitionEithers)
 import Data.Serialize (Serialize)
+import System.Directory (doesDirectoryExist, createDirectory)
 
 -- | A habitat containing artificial life.
 data Universe c l d n x a = Universe {
+    _initialised :: Bool,
+    _dirName :: FilePath,
     _clock :: c,
     _logger :: l,
     _agentDB :: d,
@@ -61,14 +65,27 @@ data Universe c l d n x a = Universe {
 
 makeLenses ''Universe
 
+initIfNeeded :: StateT (Universe c l d n x a) IO ()
+initIfNeeded = do
+  isInitialised <- gets (view initialised)
+  unless isInitialised $ modifyLift initialise
+
+initialise :: Universe c l d n x a -> IO (Universe c l d n x a)
+initialise u = do
+  let d = view dirName u
+  dExists <- doesDirectoryExist d
+  unless dExists (createDirectory d)
+  return $ set initialised True u
+
 instance (Clock c, Logger l) => Logger (Universe c l d n x a) where
   writeToLog msg = do
+    initIfNeeded
     t <- currentTime
     zoom logger $ writeToLog $ show t ++ "\t" ++ msg
 
 instance Clock c => Clock (Universe c l d n x a) where
-  currentTime = zoom clock currentTime
-  incTime = zoom clock incTime
+  currentTime = initIfNeeded >> zoom clock currentTime
+  incTime = initIfNeeded >> zoom clock incTime
 
 -- instance (Database d, DBRecord d ~ DBRecord (Universe c l d n x a)) =>
 --     Database (Universe c l d n x a) where
@@ -81,23 +98,27 @@ instance Clock c => Clock (Universe c l d n x a) where
 --   delete = zoom agentDB . delete
 
 instance AgentNamer n => AgentNamer (Universe c l d n x a) where
-  genName = zoom namer N.genName
+  genName = initIfNeeded >> zoom namer N.genName
 
 agentIds :: Database d => StateT (Universe c l d n x a) IO [String]
-agentIds = zoom agentDB keys
+agentIds = initIfNeeded >> zoom agentDB keys
 
 archivedAgentIds :: Database d => StateT (Universe c l d n x a) IO [String]
-archivedAgentIds = zoom agentDB archivedKeys
+archivedAgentIds = initIfNeeded >> zoom agentDB archivedKeys
 
 getAgent
   :: (Serialize a, Database d, a ~ DBRecord d)
     => String -> StateT (Universe c l d n x a) IO (Either String a)
-getAgent = zoom agentDB . lookup
+getAgent name = do
+  initIfNeeded
+  zoom agentDB $ lookup name
 
 getAgentFromArchive
   :: (Serialize a, Database d, a ~ DBRecord d)
     => String -> StateT (Universe c l d n x a) IO (Either String a)
-getAgentFromArchive = zoom agentDB . lookupInArchive
+getAgentFromArchive name = do
+  initIfNeeded
+  zoom agentDB $ lookupInArchive name
 
 multiLookup :: (Serialize a, Database d, Record a, a ~ DBRecord d) => 
   [AgentId] -> StateT d IO (Either String [DBRecord d])
@@ -106,7 +127,7 @@ multiLookup names = do
   let (msgs, agents) = partitionEithers results
   if null msgs
     then return $ Right agents
-    else return . Left . show $ msgs
+    else return . Left $ show msgs
 
 storeOrArchive :: 
   (Serialize a, Database d, Record a, Agent a, a ~ DBRecord d) =>
@@ -117,18 +138,22 @@ storeOrArchive a = do
 
 addAgent :: (Serialize a, Database d, Record a, a ~ DBRecord d) =>
      DBRecord d -> StateT (Universe c l d n x a) IO ()
-addAgent = zoom agentDB . store
+addAgent a = do
+  initIfNeeded
+  zoom agentDB $ store a
 
 archiveAgent :: (Serialize a, Database d, Record a, a ~ DBRecord d) =>
      DBRecord d -> StateT (Universe c l d n x a) IO ()
-archiveAgent = zoom agentDB . delete . D.key
+archiveAgent a = do
+  initIfNeeded
+  zoom agentDB . delete $ D.key a
 
 type SimpleUniverse a = 
   Universe PersistentCounter SimpleRotatingLogger (FSDatabase a)
     SimpleAgentNamer () a
 
 mkSimpleUniverse :: String -> FilePath -> Int -> SimpleUniverse a
-mkSimpleUniverse name dir rotateCount = Universe c l d n ()
+mkSimpleUniverse name dir rotateCount = Universe False dir c l d n ()
   where c = mkPersistentCounter (dir ++ "/clock")
         l = mkSimpleRotatingLogger (dir ++ "/log/") name rotateCount
         d = mkFSDatabase (dir ++ "/db")

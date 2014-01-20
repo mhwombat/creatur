@@ -1,5 +1,5 @@
 Name:              creatur
-Version:           4.2.0
+Version:           4.3.2
 Stability:         experimental
 Synopsis:          Framework for artificial life experiments.
 Description:       A software framework for automating experiments
@@ -82,6 +82,7 @@ Test-suite creatur-tests
                     binary ==0.5.* || ==0.7.*,
                     cereal ==0.3.* || ==0.4.*,
                     creatur,
+                    directory ==1.2.*,
                     hmatrix ==0.14.* || ==0.15.*,
                     HUnit ==1.2.*,
                     MonadRandom ==0.1.*,
@@ -90,8 +91,9 @@ Test-suite creatur-tests
                     test-framework ==0.8.*,
                     test-framework-hunit ==0.3.*,
                     test-framework-quickcheck2 ==0.3.*,
-                    QuickCheck ==2.5.* || ==2.6.*
+                    QuickCheck ==2.6.*
   Other-modules:    ALife.Creatur.UtilQC
+                    ALife.Creatur.CounterQC
                     ALife.Creatur.Database.FileSystemQC
                     ALife.Creatur.Genetics.CodeQC
                     ALife.Creatur.Genetics.DiploidQC,

@@ -143,8 +143,8 @@ randomOneOfPair :: (RandomGen g) => (a, a) -> Rand g a
 randomOneOfPair pair = do
   chooseFst <- weightedRandomBoolean 0.5
   if chooseFst 
-    then return . fst $ pair
-    else return . snd $ pair
+    then return $ fst pair
+    else return $ snd pair
 
 randomOneOfList :: (RandomGen g) => [a] -> Rand g a
 randomOneOfList xs = do

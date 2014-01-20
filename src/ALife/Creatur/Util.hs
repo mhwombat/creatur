@@ -179,8 +179,8 @@ stateMap f g (StateT h) = StateT $ liftM (fmap f) . h . g
 fromEither     :: a -> Either e a -> a
 fromEither d x = case x of {Left _ -> d; Right v  -> v}
 
--- | The 'catEithers' function takes a list of 'Either's and returns
---   a list of all the 'Right' values. 
+-- | Takes a list of 'Either's and returns a list of all the 'Right'
+--   values. 
 catEithers              :: [Either e a] -> [a]
 catEithers ls = [x | Right x <- ls]
 
