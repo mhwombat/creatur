@@ -40,14 +40,15 @@ data Daemon s = Daemon
     onStartup :: s -> IO s,
     onShutdown :: s -> IO (),
     onException :: s -> SomeException -> IO s,
+    -- | The agent task.
     task :: StateT s IO (),
     username :: String,
+    -- | Number of microseconds to sleep between agent tasks.
     sleepTime :: Int
   }
 
--- | @'launch' username sleepTime state task@ creates a daemon
---   running as @username@, which invokes @task@ repeatedly, sleeping 
---   for @sleepTime@ microseconds between invocations of @task@.
+-- | @'launch' daemon state@ creates a daemon running under the current
+--   user's real userID, which invokes @task@.
 launch :: Daemon s -> s -> IO ()
 launch d s = do
   uid <- getRealUserID

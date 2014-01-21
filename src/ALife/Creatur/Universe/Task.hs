@@ -50,10 +50,10 @@ import Data.List (unfoldr)
 import Data.Maybe (catMaybes)
 import Data.Serialize (Serialize)
 
-simpleDaemon :: Logger u => Daemon u
-simpleDaemon = Daemon
+simpleDaemon :: Logger u => String -> Daemon u
+simpleDaemon version = Daemon
   {
-    onStartup = startupHandler,
+    onStartup = startupHandler version,
     onShutdown = shutdownHandler,
     onException = exceptionHandler,
     task = undefined,
@@ -61,8 +61,8 @@ simpleDaemon = Daemon
     sleepTime = 100000
   }
 
-startupHandler :: Logger u => u -> IO u
-startupHandler = execStateT (writeToLog "Starting")
+startupHandler :: Logger u => String -> u -> IO u
+startupHandler version = execStateT (writeToLog $ "Starting " ++ version)
 
 shutdownHandler :: Logger u => u -> IO ()
 shutdownHandler u = do
