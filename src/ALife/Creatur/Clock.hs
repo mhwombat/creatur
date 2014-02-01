@@ -37,4 +37,3 @@ class Clock c where
   currentTime :: StateT c IO Time
   -- | Advance the clock to the next "tick".
   incTime :: StateT c IO ()
-

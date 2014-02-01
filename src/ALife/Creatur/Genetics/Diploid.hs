@@ -11,8 +11,7 @@
 --
 ------------------------------------------------------------------------
 {-# LANGUAGE TypeFamilies, FlexibleContexts, FlexibleInstances,
-    DefaultSignatures, DeriveGeneric, TypeOperators,
-    UndecidableInstances #-}
+    DefaultSignatures, DeriveGeneric, TypeOperators #-}
 module ALife.Creatur.Genetics.Diploid
   (
     Diploid(..),

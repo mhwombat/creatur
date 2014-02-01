@@ -10,7 +10,7 @@
 -- Definitions used throughout the Créatúr framework.
 --
 ------------------------------------------------------------------------
-{-# LANGUAGE TypeFamilies, FlexibleContexts #-}
+{-# LANGUAGE TypeFamilies, FlexibleInstances, FlexibleContexts #-}
 
 module ALife.Creatur
  (
@@ -18,6 +18,8 @@ module ALife.Creatur
     AgentId,
     Time
  ) where
+
+import ALife.Creatur.Database (Record, key)
 
 -- | The internal clock used by Créatúr is a simple counter.
 type Time = Int
@@ -27,11 +29,9 @@ type AgentId = String
 
 -- | An artificial life species.
 --   All species used in Créatúr must be an instance of this class.
-class Agent a where
-
+class (Record a) => Agent a where
   -- | Returns the agent ID.
   agentId :: a -> AgentId
-
+  agentId = key
   -- | Returns True if the agent is alive, false otherwise.
   isAlive :: a -> Bool
-

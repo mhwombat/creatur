@@ -87,7 +87,7 @@ wrap :: IO () -> IO ()
 wrap t = catch t
   (\e -> do
      let err = show (e :: SomeException)
-     hPutStr stderr ("Warning: " ++ err)
+     hPutStr stderr ("Unhandled exception: " ++ err)
      return ())
 
 handleTERM :: IO ()

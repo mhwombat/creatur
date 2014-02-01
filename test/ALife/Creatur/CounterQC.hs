@@ -23,14 +23,17 @@ import System.IO.Temp (withSystemTempDirectory)
 import Test.Framework as TF (Test, testGroup)
 import Test.HUnit as TH (assertEqual, assertBool)
 import Test.Framework.Providers.HUnit (testCase)
-import System.Directory (doesFileExist)
+import System.Directory (doesFileExist, doesDirectoryExist)
+import System.FilePath (dropFileName)
 
 tryCounter :: FilePath -> IO ()
 tryCounter dir = do
-  let filename = dir ++ "/counter"
+  let filename = dir ++ "/wombat/counter"
   let k = mkPersistentCounter filename
   (initialCount, k2) <- runStateT current k
   assertEqual "test1" initialCount 0
+  dirExists <- doesDirectoryExist $ dropFileName filename
+  assertBool "directory created too early" (not dirExists)
   fileExists <- doesFileExist filename
   assertBool "file created too early" (not fileExists)
 

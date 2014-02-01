@@ -22,7 +22,8 @@ import ALife.Creatur.Util (modifyLift)
 import Control.Monad (unless)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.State (StateT, get, gets, modify)
-import System.Directory (doesFileExist)
+import System.Directory (doesFileExist, createDirectoryIfMissing)
+import System.FilePath (dropFileName)
 import System.IO (hGetContents, withFile, Handle, IOMode(ReadMode))
 import Text.Read (readEither)
 
@@ -49,7 +50,10 @@ instance Counter PersistentCounter where
     liftIO $ store k
 
 store :: PersistentCounter -> IO ()
-store counter = writeFile (cFilename counter) $ show (cValue counter)
+store counter = do
+  let f = cFilename counter
+  createDirectoryIfMissing True $ dropFileName f
+  writeFile f $ show (cValue counter)
   
 initIfNeeded :: StateT PersistentCounter IO ()
 initIfNeeded = do
@@ -77,7 +81,7 @@ instance Clock PersistentCounter where
 readCounter :: Handle -> IO (Either String Int)
 readCounter h = do
   s <- hGetContents h
-  let x = readEither s :: Either String Int
+  let x = readEither s
   case x of
     Left msg -> return $ Left (msg ++ "\"" ++ s ++ "\"")
     Right c  -> return $ Right c
