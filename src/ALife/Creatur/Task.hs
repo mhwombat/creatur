@@ -33,10 +33,11 @@ module ALife.Creatur.Task
 
 import ALife.Creatur.Daemon (Daemon(..))
 import ALife.Creatur.Universe (Universe, Agent, AgentProgram,
-  AgentsProgram, writeToLog, lineup, refresh, rotate, endOfRound,
+  AgentsProgram, writeToLog, lineup, refresh, markDone, endOfRound,
   withAgent, withAgents, incTime)
 import Control.Conditional (whenM)
 import Control.Exception (SomeException)
+import Control.Monad (when)
 import Control.Monad.State (StateT, execStateT)
 import Data.Serialize (Serialize)
 
@@ -66,10 +67,10 @@ runNoninteractingAgents
   :: (Universe u, Serialize (Agent u))
     => AgentProgram u -> SummaryProgram u -> StateT u IO ()
 runNoninteractingAgents agentProgram summaryProgram = do
-  rotate
   atEndOfRound summaryProgram
   (a:_) <- lineup
   withAgent agentProgram a
+  markDone a
 
 --   The input parameter is a list of agents. The first agent in the
 --   list is the agent whose turn it is to use the CPU. The rest of
@@ -84,23 +85,21 @@ runInteractingAgents
   :: (Universe u, Serialize (Agent u))
     => AgentsProgram u -> SummaryProgram u -> StateT u IO ()
 runInteractingAgents agentsProgram summaryProgram = do
-  rotate
   atEndOfRound summaryProgram
   as <- lineup
   withAgents agentsProgram as
+  when (not $ null as) $ markDone (head as)
 
 atEndOfRound
   :: Universe u 
     => SummaryProgram u -> StateT u IO ()
 atEndOfRound summaryProgram = do
-  lineup >>= writeToLog . show
   whenM endOfRound $ do
     writeToLog "End of round"
     summaryProgram
     refresh
     incTime
     writeToLog "Beginning of round"
-
 
 -- | A program that processes the outputs from all the agent programs.
 --   For example, this program might aggregate the statistics and

@@ -30,7 +30,7 @@ import Data.ByteString as BS (readFile, writeFile)
 import qualified Data.Serialize as DS 
   (Serialize, decode, encode)
 import System.Directory (createDirectoryIfMissing, doesFileExist, 
-  getDirectoryContents, removeFile)
+  getDirectoryContents, renameFile)
 
 -- | A simple database where each record is stored in a separate file, 
 --   and the name of the file is the record's key.
@@ -46,6 +46,8 @@ instance Database (FSDatabase r) where
 
   keys = keysIn mainDir
 
+  numRecords = fmap length keys
+  
   archivedKeys = keysIn archiveDir
 
   lookup k = k `lookupIn` mainDir
@@ -58,8 +60,12 @@ instance Database (FSDatabase r) where
 
   delete name = do
     initIfNeeded
-    fileExists <- liftIO $ doesFileExist name
-    when fileExists $ liftIO $ removeFile name
+    d1 <-  gets mainDir
+    d2 <- gets archiveDir
+    let f1 = d1 ++ '/':name
+    let f2 = d2 ++ '/':name
+    fileExists <- liftIO $ doesFileExist f1
+    when fileExists $ liftIO $ renameFile f1 f2
 
 keysIn
   :: (FSDatabase r -> FilePath) -> StateT (FSDatabase r) IO [String]

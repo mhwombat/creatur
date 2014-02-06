@@ -29,6 +29,8 @@ class Database d where
   type DBRecord d
   -- | Get a list of all active keys in the database.
   keys :: StateT d IO [String]
+  -- | Return the number of records stored in the database.
+  numRecords :: StateT d IO Int
   -- | Get a list of all archived keys in the database. If the database
   --   does not implement archiving, it may return an empty list.
   archivedKeys :: StateT d IO [String]

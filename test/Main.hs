@@ -13,6 +13,7 @@
 module Main where
 
 import ALife.Creatur.CounterQC (test)
+import ALife.Creatur.ChecklistQC (test)
 import ALife.Creatur.UniverseQC (test)
 import ALife.Creatur.Database.FileSystemQC (test)
 import ALife.Creatur.UtilQC (test)
@@ -28,6 +29,7 @@ tests :: [TF.Test]
 tests = 
   [ 
     ALife.Creatur.CounterQC.test,
+    ALife.Creatur.ChecklistQC.test,
     ALife.Creatur.UniverseQC.test,
     ALife.Creatur.Database.FileSystemQC.test,
     ALife.Creatur.UtilQC.test,

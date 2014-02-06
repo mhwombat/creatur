@@ -23,7 +23,7 @@ import ALife.Creatur.Universe
 import Control.Monad.State (execStateT, evalStateT, runStateT)
 import Data.Serialize (Serialize)
 import GHC.Generics (Generic)
-import System.Directory (doesFileExist)
+import System.Directory (doesFileExist, doesDirectoryExist)
 import System.IO.Temp (withSystemTempDirectory)
 import Test.Framework as TF (Test, testGroup)
 import Test.HUnit as TH (assertEqual, assertBool)
@@ -41,21 +41,24 @@ instance A.Agent TestAgent where
 instance Record TestAgent where
   key = aAgentId
 
-tryUniverse :: FilePath -> IO ()
-tryUniverse dir = do
-  let filename = dir ++ "/universe"
-  let u = mkSimpleUniverse "wombat" filename 1000 :: SimpleUniverse TestAgent
+testUniverseCreation :: IO ()
+testUniverseCreation = withSystemTempDirectory "creaturTest.tmp" testUniverseCreation'
+
+testUniverseCreation' :: FilePath -> IO ()
+testUniverseCreation' dir = do
+  let dirname = dir ++ "/universe"
+  let u = mkSimpleUniverse "wombat" dirname 1000 :: SimpleUniverse TestAgent
   (t, u2) <- runStateT currentTime u
   assertEqual "test1" 0 t
-  fileExists <- doesFileExist filename
-  assertBool "universe created too early" (not fileExists)
+  dirExists <- doesDirectoryExist dirname
+  assertBool "universe created too early" (not dirExists)
 
   u3 <- execStateT incTime u2
   t2 <- evalStateT currentTime u3
   assertEqual "test2" 1 t2
 
   -- Re-read the time. Was it updated properly?
-  let u4 = mkSimpleUniverse "wombat" filename 1000 :: SimpleUniverse TestAgent
+  let u4 = mkSimpleUniverse "wombat" dirname 1000 :: SimpleUniverse TestAgent
   t3 <- evalStateT currentTime u4
   assertEqual "test3" 1 t3
 
@@ -64,18 +67,56 @@ tryUniverse dir = do
   assertEqual "test4" 2 t4
 
   -- Re-read the counter. Was it updated properly?
-  let u6 = mkSimpleUniverse "wombat" filename 1000 :: SimpleUniverse TestAgent
+  let u6 = mkSimpleUniverse "wombat" dirname 1000 :: SimpleUniverse TestAgent
   t5 <- evalStateT currentTime u6
   assertEqual "test5" 2 t5
 
-testUniverse :: IO ()
-testUniverse = withSystemTempDirectory "creaturTest.tmp" tryUniverse
+testUniverseDB :: IO ()
+testUniverseDB = withSystemTempDirectory "creaturTest.tmp" testUniverseDB'
+
+testUniverseDB' :: FilePath -> IO ()
+testUniverseDB' dir = do
+  let dirname = dir ++ "/universe"
+  let u = mkSimpleUniverse "wombat" dirname 1000 :: SimpleUniverse TestAgent
+  let a = TestAgent "agent_a" True
+  u2 <- execStateT (store a) u
+  xs <- evalStateT agentIds u2
+  assertBool "agent not in agentIds list" ((A.agentId a) `elem` xs)
+  let a2 = a { aIsAlive=False }
+  u3 <- execStateT (store a2) u2
+  xs' <- evalStateT agentIds u3
+  assertBool "agent still in agentIds list" ((A.agentId a) `notElem` xs')
+  let f = dirname ++ "/db/" ++ A.agentId a
+  fileExists <- doesFileExist f
+  assertBool "agent file not removed" (not fileExists)
+  let f2 = dirname ++ "/db/archive/" ++ A.agentId a
+  fileExists2 <- doesFileExist f2
+  assertBool "agent file not archived" (fileExists2)
+
+testUniverseLineup :: IO ()
+testUniverseLineup = withSystemTempDirectory "creaturTest.tmp" testUniverseLineup'
+
+testUniverseLineup' :: FilePath -> IO ()
+testUniverseLineup' dir = do
+  let dirname = dir ++ "/universe"
+  let u = mkSimpleUniverse "wombat" dirname 1000 :: SimpleUniverse TestAgent
+  let a = TestAgent "agent_a" True
+  let b = TestAgent "agent_b" True
+  let c = TestAgent "agent_c" True
+  u2 <- execStateT (store a >> store b >> store c >> refresh) u
+  xs <- evalStateT lineup u2
+  assertBool "agent not in lineup" ((A.agentId a) `elem` xs)
+  let a2 = a { aIsAlive=False }
+  u3 <- execStateT (store a2 >> markDone (A.agentId a2)) u2
+  xs' <- evalStateT lineup u3
+  assertBool "agent still in lineup" ((A.agentId a) `notElem` xs')
 
 test :: TF.Test
 test = testGroup "HUnit ALife.Creatur.UniverseQC"
   [
-    testCase "universe"
-      testUniverse
+    testCase "testUniverseCreation" testUniverseCreation,
+    testCase "testUniverseDB" testUniverseDB,
+    testCase "testUniverseLineup" testUniverseLineup
   ]
 
 

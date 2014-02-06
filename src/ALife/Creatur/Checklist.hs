@@ -18,9 +18,10 @@ module ALife.Creatur.Checklist
   ) where
 
 import ALife.Creatur.Util (modifyLift)
-import Control.Monad (unless)
+import Control.Monad (when, unless)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.State (StateT, get, gets, put)
+import qualified Data.List as L
 import System.Directory (doesFileExist)
 import System.IO (hGetContents, withFile, Handle, IOMode(ReadMode))
 import Text.Read (readEither)
@@ -29,9 +30,10 @@ type Status = ([String], [String]) -- (toDo, done)
 
 class Checklist t where
   status :: StateT t IO Status
-  markDone :: StateT t IO ()
+  markDone :: String -> StateT t IO ()
   done :: StateT t IO Bool
   setItems :: [String] -> StateT t IO ()
+  delete :: String -> StateT t IO ()
 
 data PersistentChecklist = PersistentChecklist {
     tInitialised :: Bool,
@@ -45,18 +47,23 @@ mkPersistentChecklist f = PersistentChecklist False ([],[]) f
 
 instance Checklist PersistentChecklist where
   status = initIfNeeded >> gets tStatus
-  markDone = do
+  markDone x = do
     t <- get
-    let (xs,ys) = tStatus t
-    unless (null xs) $ do
-      let (z:zs) = xs
-      let t' = t { tStatus=(zs,ys ++ [z]) }
+    let (ys,zs) = tStatus t
+    when (x `elem` ys) $ do
+      let t' = t { tStatus=(L.delete x ys,zs ++ [x]) }
       put t'
       liftIO $ store t'
   done = gets (null . fst . tStatus)
   setItems ts = do
     t <- get
     let t' = t { tStatus=(ts,[]) }
+    put t'
+    liftIO $ store t'
+  delete tOld = do
+    t <- get
+    let (xs,ys) = tStatus t
+    let t' = t { tStatus=(L.delete tOld xs,L.delete tOld ys) } 
     put t'
     liftIO $ store t'
 

@@ -25,11 +25,12 @@ module ALife.Creatur.Universe
     -- * Database
     agentIds,
     archivedAgentIds,
+    popSize,
     getAgent,
     getAgentFromArchive,
     getAgents,
-    addAgent,
-    storeOrArchive,
+    -- addAgent,
+    store,
     -- * Names
     genName,
     -- * Agent programs
@@ -37,11 +38,12 @@ module ALife.Creatur.Universe
     withAgent,
     AgentsProgram,
     withAgents,
+    isNew, -- exported for testing only
     -- * Agent rotation
     lineup,
     endOfRound,
     refresh,
-    rotate
+    markDone
  ) where
 
 import Prelude hiding (lookup)
@@ -117,37 +119,52 @@ withChecklist program = do
   u <- get
   stateMap (setChecklist u) checklist program
 
+-- | The current "time" (counter) in this universe
 currentTime :: Universe u => StateT u IO A.Time
 currentTime = withClock C.currentTime
 
+-- | Increment the current "time" (counter) in this universe.
 incTime :: Universe u => StateT u IO ()
 incTime = withClock C.incTime
 
+-- | Write a message to the log file for this universe.
 writeToLog :: Universe u => String -> StateT u IO ()
 writeToLog msg = do
   t <- currentTime
   let logMsg = show t ++ "\t" ++ msg
   withLogger $ L.writeToLog logMsg
 
+-- | Generate a unique name for a new agent.
 genName :: Universe u => StateT u IO A.AgentId
 genName = withAgentNamer N.genName
 
+-- | Returns the list of agents in the population.
 agentIds :: Universe u => StateT u IO [A.AgentId]
 agentIds = withAgentDB D.keys
 
+-- | Returns the list of (dead) agents in the archive.
 archivedAgentIds :: Universe u => StateT u IO [A.AgentId]
 archivedAgentIds = withAgentDB D.archivedKeys
 
+-- | Returns the current size of the population.
+popSize :: Universe u => StateT u IO Int
+popSize = withAgentDB D.numRecords
+
+-- | Fetches the agent with the specified ID from the population.
+--   Note: Changes made to this agent will not "take" until
+--   @'store'@ is called.
 getAgent
   :: (Universe u, Serialize (Agent u))
     => A.AgentId -> StateT u IO (Either String (Agent u))
 getAgent name = withAgentDB (D.lookup name)
 
+-- | Fetches the agent with the specified ID from the archive.
 getAgentFromArchive
   :: (Universe u, Serialize (Agent u))
     => A.AgentId -> StateT u IO (Either String (Agent u))
 getAgentFromArchive name = withAgentDB (D.lookupInArchive name)
 
+-- | Fetches the agents with the specified IDs from the population.
 getAgents
   :: (Universe u, Serialize (Agent u))
     => [A.AgentId] -> StateT u IO (Either String [Agent u])
@@ -158,21 +175,37 @@ getAgents names = do
     then return $ Right agents
     else return . Left $ show msgs
 
-storeOrArchive
+-- | If the agent is alive, adds it to the population (replacing the
+--   the previous copy of that agent, if any). If the agent is dead,
+--   places it in the archive.
+store
   :: (Universe u, Serialize (Agent u))
     => Agent u -> StateT u IO ()
-storeOrArchive a = do
+store a = do
+  newAgent <- isNew (A.agentId a)
+  -- agentList <- agentIds
+  -- writeToLog $ "DEBUG agents:" ++ show agentList
+  -- writeToLog $ "DEBUG " ++ A.agentId a ++ " new? " ++ show newAgent
   withAgentDB (D.store a) -- Even dead agents should be stored (prior to archiving)
   if A.isAlive a
-    then writeToLog $ (A.agentId a) ++ " returned to population"
+    then
+      if newAgent
+         then writeToLog $ A.agentId a ++ " added to population"
+         else writeToLog $ A.agentId a ++ " returned to population"
     else do
       withAgentDB (D.delete $ A.agentId a)
-      writeToLog $ (A.agentId a) ++ " has been archived"
+      withChecklist $ CL.delete (A.agentId a)
+      writeToLog $ (A.agentId a) ++ " archived and removed from lineup"
 
-addAgent
-  :: (Universe u, Serialize (Agent u))
-    => Agent u -> StateT u IO ()
-addAgent a = withAgentDB $ D.store a
+-- | EXPORTED FOR TESTING ONLY
+isNew :: Universe u => A.AgentId -> StateT u IO Bool
+isNew name = fmap (name `notElem`) agentIds
+
+-- -- | Adds an agent to the universe.
+-- addAgent
+--   :: (Universe u, Serialize (Agent u))
+--     => Agent u -> StateT u IO ()
+-- addAgent a = withAgentDB $ D.store a
 
 -- | A program involving one agent.
 --   The input parameter is the agent.
@@ -189,7 +222,7 @@ withAgent program name = do
     Left msg ->
       writeToLog $ "Unable to read '" ++ name ++ "': " ++ msg
     Right a ->
-      program a >>= storeOrArchive
+      program a >>= store
 
 -- | A program involving multiple agents.
 --   The input parameter is a list of agents.
@@ -207,23 +240,32 @@ withAgents program names = do
     Left msg ->
       writeToLog $ "Unable to read '" ++ show names ++ "': " ++ msg
     Right as ->
-      program as >>= mapM_ storeOrArchive
+      program as >>= mapM_ store
 
+-- | Returns the current lineup of (living) agents in the universe.
+--   Note: Check for @'endOfRound'@ and call @'refresh'@ if needed
+--   before invoking this function.
 lineup :: Universe u => StateT u IO [A.AgentId]
 lineup = do
   (xs,ys) <- withChecklist CL.status
   return $ xs ++ ys
 
+-- | Returns true if the lineup is empty or if all of the agents in the
+--   lineup have had their turn at the CPU.
 endOfRound :: Universe u => StateT u IO Bool
 endOfRound = withChecklist CL.done
 
+-- | Creates a fresh lineup containing all of the agents in the
+--   population, in random order.
 refresh :: Universe u => StateT u IO ()
 refresh = do
   as <- shuffledAgentIds
   withChecklist (CL.setItems as)
 
-rotate :: Universe u => StateT u IO ()
-rotate = withChecklist CL.markDone
+-- | Mark the current agent done. If it is still alive, it will move
+--   to the end of the lineup.
+markDone :: Universe u => A.AgentId -> StateT u IO ()
+markDone = withChecklist . CL.markDone
 
 shuffledAgentIds :: Universe u => StateT u IO [String]
 shuffledAgentIds
