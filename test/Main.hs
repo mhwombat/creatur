@@ -22,6 +22,7 @@ import ALife.Creatur.Genetics.DiploidQC (test)
 import ALife.Creatur.Genetics.RecombinationQC (test)
 import ALife.Creatur.Genetics.BRGCBoolQC (test)
 import ALife.Creatur.Genetics.BRGCWord8QC (test)
+import ALife.Creatur.Genetics.BRGCWord16QC (test)
 
 import Test.Framework as TF (defaultMain, Test)
 
@@ -37,7 +38,8 @@ tests =
     ALife.Creatur.Genetics.DiploidQC.test,
     ALife.Creatur.Genetics.RecombinationQC.test,
     ALife.Creatur.Genetics.BRGCBoolQC.test,
-    ALife.Creatur.Genetics.BRGCWord8QC.test
+    ALife.Creatur.Genetics.BRGCWord8QC.test,
+    ALife.Creatur.Genetics.BRGCWord16QC.test
   ]
 
 main :: IO ()
