@@ -21,7 +21,7 @@ import Data.Word (Word8, Word16)
 import GHC.Generics
 
 class Analysable g where
-  -- | Writes a gene to a sequence.
+  -- | Analyses a genetic sequence.
   analyse :: g -> String
 
   default analyse :: (Generic g, GAnalysable (Rep g)) => g -> String

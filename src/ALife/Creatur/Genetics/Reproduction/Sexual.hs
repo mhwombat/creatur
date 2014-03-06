@@ -32,18 +32,18 @@ class Reproductive a where
 
   -- | A sequence of hereditary information for an agent.
   --   The type signature for the agent's genome is 
-  --   (Base a, Base a).
-  type Base a
+  --   (Strand a, Strand a).
+  type Strand a
 
   -- | From the /two/ strands of the genetic information from this 
   --   agent, creates a /single/ strand that will contribute to the
   --   child's genome. 
   --   (This is analogous to creating either a single sperm or ova.)
-  produceGamete :: RandomGen r => a -> Rand r (Base a)
+  produceGamete :: RandomGen r => a -> Rand r (Strand a)
 
   -- | Builds an agent based on the genome provided, if it is possible
   --   to do so.
-  build :: AgentId -> (Base a, Base a) -> Either [String] a
+  build :: AgentId -> (Strand a, Strand a) -> Either [String] a
 
   -- | @'makeOffspring' (parent1, parent2) name@ uses the genetic
   --   information from @parent1@ and @parent2@ to produce a child with

@@ -1,6 +1,6 @@
 ------------------------------------------------------------------------
 -- |
--- Module      :  ALife.Creatur.Genetics.Reproduction.Asexual
+-- Module      :  ALife.Creatur.Genetics.Reproduction.SimplifiedSexual
 -- Copyright   :  (c) Amy de Buitléir 2012-2013
 -- License     :  BSD-style
 -- Maintainer  :  amy@nualeargais.ie
@@ -18,7 +18,7 @@
 --
 ------------------------------------------------------------------------
 {-# LANGUAGE TypeFamilies #-}
-module ALife.Creatur.Genetics.Reproduction.Asexual
+module ALife.Creatur.Genetics.Reproduction.SimplifiedSexual
   (
     Reproductive(..)
   ) where
@@ -31,7 +31,7 @@ import Control.Monad.Random (Rand, RandomGen)
 class Reproductive a where
 
   -- | A sequence of hereditary information for an agent.
-  type Base a
+  type Strand a
 
   -- | Recombines the genetic information from two parents, creating
   --   genetic information for potential offspring.
@@ -42,11 +42,11 @@ class Reproductive a where
   --      each parent) to obtain two new strands.
   --
   --   1. Discard one strand, and return the remaining one.
-  recombine :: RandomGen r => a -> a -> Rand r (Base a)
+  recombine :: RandomGen r => a -> a -> Rand r (Strand a)
 
   -- | Builds an agent based on the genome provided, if it is possible
   --   to do so.
-  build :: AgentId -> Base a -> Either [String] a
+  build :: AgentId -> Strand a -> Either [String] a
 
   -- | @'makeOffspring' (parent1, parent2) name@ uses the genetic
   --   information from @parent1@ and @parent2@ to produce a child with

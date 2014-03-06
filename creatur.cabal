@@ -1,5 +1,5 @@
 Name:              creatur
-Version:           5.0.1
+Version:           5.2.0
 Stability:         experimental
 Synopsis:          Framework for artificial life experiments.
 Description:       A software framework for automating experiments
@@ -52,10 +52,11 @@ library
                     ALife.Creatur.Genetics.Code,
                     ALife.Creatur.Genetics.BRGCBool,
                     ALife.Creatur.Genetics.BRGCWord8,
+                    ALife.Creatur.Genetics.BRGCWord16,
                     ALife.Creatur.Genetics.Diploid,
                     ALife.Creatur.Genetics.Recombination,
-                    ALife.Creatur.Genetics.Reproduction.Asexual,
                     ALife.Creatur.Genetics.Reproduction.Sexual,
+                    ALife.Creatur.Genetics.Reproduction.SimplifiedSexual,
                     ALife.Creatur.Logger,
                     ALife.Creatur.Universe,
                     ALife.Creatur.Task,
@@ -112,4 +113,5 @@ Test-suite creatur-tests
                     ALife.Creatur.Genetics.DiploidQC,
                     ALife.Creatur.Genetics.BRGCBoolQC
                     ALife.Creatur.Genetics.BRGCWord8QC
+                    ALife.Creatur.Genetics.BRGCWord16QC
                     ALife.Creatur.Genetics.RecombinationQC
