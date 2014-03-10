@@ -69,8 +69,9 @@ runNoninteractingAgents
 runNoninteractingAgents agentProgram summaryProgram = do
   atEndOfRound summaryProgram
   (a:_) <- lineup
-  withAgent agentProgram a
   markDone a
+    -- do this first in case the next line triggers an exception
+  withAgent agentProgram a
 
 --   The input parameter is a list of agents. The first agent in the
 --   list is the agent whose turn it is to use the CPU. The rest of
@@ -87,8 +88,9 @@ runInteractingAgents
 runInteractingAgents agentsProgram summaryProgram = do
   atEndOfRound summaryProgram
   as <- lineup
-  withAgents agentsProgram as
   when (not $ null as) $ markDone (head as)
+    -- do this first in case the next line triggers an exception
+  withAgents agentsProgram as
 
 atEndOfRound
   :: Universe u 
