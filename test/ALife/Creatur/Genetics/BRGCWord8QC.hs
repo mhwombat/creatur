@@ -19,6 +19,7 @@ module ALife.Creatur.Genetics.BRGCWord8QC
 import Prelude hiding (read)
 import ALife.Creatur.Genetics.BRGCWord8
 import ALife.Creatur.Genetics.Analysis (Analysable)
+import ALife.Creatur.Util (fromEither)
 import Control.Applicative ((<$>), (<*>))
 import Data.Word (Word8, Word16)
 import GHC.Generics (Generic)
@@ -31,6 +32,13 @@ prop_round_trippable :: (Eq g, Genetic g) => g -> Property
 prop_round_trippable g = property $ g' == Right g
   where x = write g
         g' = read x
+
+prop_rawWord8s_round_trippable :: [Word8] -> Property
+prop_rawWord8s_round_trippable g = property $ g' == g
+  where x = runWriter (putRawWord8s g)
+        g' = fromEither (error "read returned Nothing") .
+               runReader (getRawWord8s n) $ x
+        n = length g
 
 data TestStructure = A | B Bool | C Word8 | D Word16 Char | E [TestStructure]
   deriving (Show, Eq, Generic)
@@ -67,7 +75,9 @@ test = testGroup "ALife.Creatur.Genetics.BRGCWord8QC"
     testProperty "prop_round_trippable - Word16"
       (prop_round_trippable :: Word16 -> Property),
     testProperty "prop_round_trippable - TestStructure"
-      (prop_round_trippable :: TestStructure -> Property)
+      (prop_round_trippable :: TestStructure -> Property),
+    testProperty "prop_rawWord8s_round_trippable"
+      prop_rawWord8s_round_trippable
   ]
 
 

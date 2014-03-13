@@ -55,6 +55,7 @@ import Control.Applicative ((<$>), (<*>))
 import Control.Monad.State.Lazy (StateT, runState, execState, evalState)
 import qualified Control.Monad.State.Lazy as S (put, get, gets)
 import Data.Char (ord, chr)
+import Data.Either (partitionEithers)
 import Data.Functor.Identity (Identity)
 import Data.Word (Word8, Word16)
 import GHC.Generics
@@ -64,10 +65,10 @@ type Sequence = [Word8]
 type Writer = StateT Sequence Identity
 
 write :: Genetic x => x -> Sequence
-write x = execState (put x) []
+write x = runWriter (put x)
 
 runWriter :: Writer () -> Sequence
-runWriter w = execState w []
+runWriter w = execState (w >> finalise) []
 
 type Reader = StateT (Sequence, Int) Identity
 
@@ -185,7 +186,17 @@ instance Genetic Word16 where
     let low = fmap fromIntegral l :: Either [String] Word16
     return . fmap grayToIntegral $ (+) <$> high <*> low
 
-instance (Genetic a) => Genetic [a]
+instance (Genetic a) => Genetic [a] where
+  put xs = put n' >> mapM_ put xs
+    where n = length xs
+          n' = if n <= fromIntegral (maxBound :: Word16)
+                 then fromIntegral n
+                 else error "List too long" :: Word16
+  get = do
+    n <- get :: Reader (Either [String] Word16)
+    case n of
+      Right n' -> getList (fromIntegral n')
+      Left s   -> return $ Left s
 
 instance (Genetic a) => Genetic (Maybe a)
 
@@ -198,11 +209,24 @@ instance (Genetic a, Genetic b) => Genetic (Either a b)
 -- Utilities
 --
 
+finalise :: Writer ()
+finalise = do
+  xs <- S.get
+  S.put (reverse xs)
+
+getList :: Genetic a => Int -> Reader (Either [String] [a])
+getList n = do
+  cs <- sequence $ replicate n get
+  let (mss, xs) = partitionEithers cs
+  if null mss
+    then return $ Right xs
+    else return $ Left (head mss)
+ 
 -- | Write a Word8 value to the genome without encoding it
 putRawWord8 :: Word8 -> Writer ()
 putRawWord8 x = do
   xs <- S.get
-  S.put (xs ++ [x])
+  S.put (x:xs)
 
 -- | Read a Word8 value from the genome without decoding it
 getRawWord8 :: Reader (Either [String] Word8)
@@ -220,7 +244,7 @@ getRawWord8 = do
 putRawWord8s :: [Word8] -> Writer ()
 putRawWord8s ys = do
   xs <- S.get
-  S.put (xs ++ ys)
+  S.put (reverse ys ++ xs)
 
 -- | Read a raw sequence of Word8 values from the genome
 getRawWord8s :: Int -> Reader (Either [String] [Word8])
