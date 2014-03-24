@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------
 -- |
 -- Module      :  ALife.Creatur.Daemon
--- Copyright   :  (c) Amy de Buitléir 2012-2013
+-- Copyright   :  (c) Amy de Buitléir 2012-2014
 -- License     :  BSD-style
 -- Maintainer  :  amy@nualeargais.ie
 -- Stability   :  experimental
@@ -34,7 +34,7 @@ termReceived :: MVar Bool
 termReceived = unsafePerformIO (newMVar False)
 
 -- | Daemon configuration.
---   If @username@ == "", the daemon will run under the login name.
+--   If @username@ is null, the daemon will run under the login name.
 data Daemon s = Daemon
   {
     onStartup :: s -> IO s,

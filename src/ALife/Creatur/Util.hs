@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------
 -- |
 -- Module      :  ALife.Creatur.Util
--- Copyright   :  (c) Amy de Buitléir 2011-2013
+-- Copyright   :  (c) Amy de Buitléir 2011-2014
 -- License     :  BSD-style
 -- Maintainer  :  amy@nualeargais.ie
 -- Stability   :  experimental

@@ -33,7 +33,7 @@ data SimpleAgentNamer = SimpleAgentNamer
   {
     prefix :: String,
     counter :: PersistentCounter
-  }
+  } deriving (Show, Eq)
 
 mkSimpleAgentNamer :: String -> FilePath -> SimpleAgentNamer
 mkSimpleAgentNamer s f = SimpleAgentNamer s $ mkPersistentCounter f

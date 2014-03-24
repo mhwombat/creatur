@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------
 -- |
 -- Module      :  ALife.Creatur.Checklist
--- Copyright   :  (c) Amy de Buitléir 2012-2013
+-- Copyright   :  (c) Amy de Buitléir 2013-2014
 -- License     :  BSD-style
 -- Maintainer  :  amy@nualeargais.ie
 -- Stability   :  experimental
@@ -39,7 +39,7 @@ data PersistentChecklist = PersistentChecklist {
     tInitialised :: Bool,
     tStatus :: Status,
     tFilename :: FilePath
-  } deriving Show
+  } deriving (Show, Eq)
 
 -- | Creates a counter that will store its value in the specified file.
 mkPersistentChecklist :: FilePath -> PersistentChecklist

@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------
 -- |
 -- Module      :  ALife.Creatur.Logger
--- Copyright   :  (c) Amy de Buitléir 2011-2013
+-- Copyright   :  (c) Amy de Buitléir 2011-2014
 -- License     :  BSD-style
 -- Maintainer  :  amy@nualeargais.ie
 -- Stability   :  experimental
@@ -39,7 +39,7 @@ data SimpleRotatingLogger = SimpleRotatingLogger {
     expFilename :: FilePath,
     maxRecordsPerFile :: Int,
     recordCount :: Int
-  } deriving Show
+  } deriving (Show, Eq)
 
 -- | @'mkSimpleRotatingLogger' d prefix n@ creates a logger that will write to
 --   directory @d@. The log \"rotates\" (starts a new log file) every @n@

@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------
 -- |
 -- Module      :  ALife.Creatur.Database.FileSystem
--- Copyright   :  (c) Amy de Buitléir 2012-2013
+-- Copyright   :  (c) Amy de Buitléir 2012-2014
 -- License     :  BSD-style
 -- Maintainer  :  amy@nualeargais.ie
 -- Stability   :  experimental
@@ -39,7 +39,7 @@ data FSDatabase r = FSDatabase
     initialised :: Bool,
     mainDir :: FilePath,
     archiveDir :: FilePath
-  } deriving Show
+  } deriving (Show, Eq)
 
 instance Database (FSDatabase r) where
   type DBRecord (FSDatabase r) = r

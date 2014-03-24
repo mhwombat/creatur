@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------
 -- |
 -- Module      :  Main
--- Copyright   :  (c) Amy de Buitléir 2012-2013
+-- Copyright   :  (c) Amy de Buitléir 2012-2014
 -- License     :  BSD-style
 -- Maintainer  :  amy@nualeargais.ie
 -- Stability   :  experimental
@@ -17,7 +17,6 @@ import ALife.Creatur.ChecklistQC (test)
 import ALife.Creatur.UniverseQC (test)
 import ALife.Creatur.Database.FileSystemQC (test)
 import ALife.Creatur.UtilQC (test)
-import ALife.Creatur.Genetics.CodeQC (test)
 import ALife.Creatur.Genetics.DiploidQC (test)
 import ALife.Creatur.Genetics.RecombinationQC (test)
 import ALife.Creatur.Genetics.BRGCBoolQC (test)
@@ -34,7 +33,6 @@ tests =
     ALife.Creatur.UniverseQC.test,
     ALife.Creatur.Database.FileSystemQC.test,
     ALife.Creatur.UtilQC.test,
-    ALife.Creatur.Genetics.CodeQC.test,
     ALife.Creatur.Genetics.DiploidQC.test,
     ALife.Creatur.Genetics.RecombinationQC.test,
     ALife.Creatur.Genetics.BRGCBoolQC.test,

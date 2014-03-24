@@ -35,7 +35,7 @@ data PersistentCounter = PersistentCounter {
     cInitialised :: Bool,
     cValue :: Int,
     cFilename :: FilePath
-  } deriving Show
+  } deriving (Show, Eq)
 
 -- | Creates a counter that will store its value in the specified file.
 mkPersistentCounter :: FilePath -> PersistentCounter

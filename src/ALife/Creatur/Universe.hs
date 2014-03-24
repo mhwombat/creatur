@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------
 -- |
 -- Module      :  ALife.Creatur.Universe
--- Copyright   :  (c) Amy de Buitléir 2012-2013
+-- Copyright   :  (c) Amy de Buitléir 2012-2014
 -- License     :  BSD-style
 -- Maintainer  :  amy@nualeargais.ie
 -- Stability   :  experimental
@@ -278,7 +278,7 @@ data SimpleUniverse a = SimpleUniverse
     suDB :: (FS.FSDatabase a),
     suNamer :: N.SimpleAgentNamer,
     suChecklist :: CL.PersistentChecklist
-  }
+  } deriving (Show, Eq)
 
 instance (A.Agent a, Serialize a) => Universe (SimpleUniverse a) where
   type Agent (SimpleUniverse a) = a

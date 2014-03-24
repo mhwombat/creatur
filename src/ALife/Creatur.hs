@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------
 -- |
 -- Module      :  ALife.Creatur
--- Copyright   :  (c) Amy de Buitléir 2012-2013
+-- Copyright   :  (c) Amy de Buitléir 2012-2014
 -- License     :  BSD-style
 -- Maintainer  :  amy@nualeargais.ie
 -- Stability   :  experimental
@@ -16,10 +16,13 @@ module ALife.Creatur
  (
     Agent(..),
     AgentId,
-    Time
+    Time,
+    programVersion
  ) where
 
 import ALife.Creatur.Database (Record, key)
+import Data.Version (showVersion)
+import Paths_creatur (version)
 
 -- | The internal clock used by Créatúr is a simple counter.
 type Time = Int
@@ -35,3 +38,6 @@ class (Record a) => Agent a where
   agentId = key
   -- | Returns True if the agent is alive, false otherwise.
   isAlive :: a -> Bool
+
+programVersion :: String
+programVersion = "creatur-" ++ showVersion version

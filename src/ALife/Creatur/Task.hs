@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------
 -- |
 -- Module      :  ALife.Creatur.Task
--- Copyright   :  (c) Amy de Buitléir 2012-2013
+-- Copyright   :  (c) Amy de Buitléir 2012-2014
 -- License     :  BSD-style
 -- Maintainer  :  amy@nualeargais.ie
 -- Stability   :  experimental
@@ -70,7 +70,7 @@ runNoninteractingAgents agentProgram summaryProgram = do
   atEndOfRound summaryProgram
   (a:_) <- lineup
   markDone a
-    -- ^^^ do first in case the next line triggers an exception
+    -- do that first in case the next line triggers an exception
   withAgent agentProgram a
 
 --   The input parameter is a list of agents. The first agent in the
@@ -89,7 +89,7 @@ runInteractingAgents agentsProgram summaryProgram = do
   atEndOfRound summaryProgram
   as <- lineup
   when (not $ null as) $ markDone (head as)
-    -- ^^^ do first in case the next line triggers an exception
+    -- do that first in case the next line triggers an exception
   withAgents agentsProgram as
 
 atEndOfRound

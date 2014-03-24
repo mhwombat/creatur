@@ -1,5 +1,5 @@
 Name:              creatur
-Version:           5.2.3
+Version:           5.2.9
 Stability:         experimental
 Synopsis:          Framework for artificial life experiments.
 Description:       A software framework for automating experiments
@@ -13,18 +13,18 @@ Description:       A software framework for automating experiments
                    tutorial at 
                    <https://github.com/mhwombat/creatur-examples/raw/master/Tutorial.pdf>
                    for examples on how to use the
-                   Créatúr framework.
+                   Cr&#233;at&#250;r framework.
                    .
-                   About the name: \"Créatúr\" (pronounced kray-toor)
+                   About the name: \"Cr&#233;at&#250;r\" (pronounced kray-toor)
                    is an irish word meaning animal, creature, or an 
                    unfortunate person.
 Category:          AI
 License:           BSD3
 License-file:      LICENSE
-Copyright:         (c) Amy de Buitléir 2010-2012
+Copyright:         (c) Amy de Buitl&#233;ir 2010-2014
 Homepage:          https://github.com/mhwombat/creatur
 Bug-reports:       https://github.com/mhwombat/creatur/issues
-Author:            Amy de Buitléir
+Author:            Amy de Buitl&#233;ir
 Maintainer:        amy@nualeargais.ie
 Build-Type:        Simple
 Cabal-Version:     >=1.8
@@ -36,7 +36,7 @@ source-repository head
 source-repository this
   type:     git
   location: https://github.com/mhwombat/creatur.git
-  tag:      5.2.3
+  tag:      5.2.9
 
 library
   GHC-Options:      -Wall -fno-warn-orphans
@@ -50,7 +50,6 @@ library
                     ALife.Creatur.Database,
                     ALife.Creatur.Database.FileSystem,
                     ALife.Creatur.Genetics.Analysis,
-                    ALife.Creatur.Genetics.Code,
                     ALife.Creatur.Genetics.BRGCBool,
                     ALife.Creatur.Genetics.BRGCWord8,
                     ALife.Creatur.Genetics.BRGCWord16,
@@ -62,6 +61,7 @@ library
                     ALife.Creatur.Universe,
                     ALife.Creatur.Task,
                     ALife.Creatur.Util
+  Other-modules:    Paths_creatur
   Build-Depends:    
                     array ==0.4.* || ==0.5.*,
                     base ==4.*,
@@ -110,7 +110,6 @@ Test-suite creatur-tests
   Other-modules:    ALife.Creatur.UtilQC
                     ALife.Creatur.CounterQC
                     ALife.Creatur.Database.FileSystemQC
-                    ALife.Creatur.Genetics.CodeQC
                     ALife.Creatur.Genetics.DiploidQC,
                     ALife.Creatur.Genetics.BRGCBoolQC
                     ALife.Creatur.Genetics.BRGCWord8QC
