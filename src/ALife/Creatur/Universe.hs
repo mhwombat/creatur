@@ -17,6 +17,7 @@ module ALife.Creatur.Universe
     Universe(..),
     SimpleUniverse,
     mkSimpleUniverse,
+    mkCachedUniverse,
     -- * Clock
     currentTime,
     incTime,
@@ -55,6 +56,7 @@ import qualified ALife.Creatur.Clock as C
 import qualified ALife.Creatur.Counter as K
 import qualified ALife.Creatur.Database as D
 import qualified ALife.Creatur.Database.FileSystem as FS
+import qualified ALife.Creatur.Database.CachedFileSystem as CFS
 import qualified ALife.Creatur.Logger as L
 import ALife.Creatur.Util (stateMap, shuffle)
 import Control.Monad.IO.Class (liftIO)
@@ -304,5 +306,42 @@ mkSimpleUniverse name dir rotateCount
   where c = K.mkPersistentCounter (dir ++ "/clock")
         l = L.mkSimpleRotatingLogger (dir ++ "/log/") name rotateCount
         d = FS.mkFSDatabase (dir ++ "/db")
+        n = N.mkSimpleAgentNamer (name ++ "_") (dir ++ "/namer")
+        cl = CL.mkPersistentChecklist (dir ++ "/todo")
+
+data CachedUniverse a = CachedUniverse
+  {
+    cuClock :: K.PersistentCounter,
+    cuLogger :: L.SimpleRotatingLogger,
+    cuDB :: (CFS.CachedFSDatabase a),
+    cuNamer :: N.SimpleAgentNamer,
+    cuChecklist :: CL.PersistentChecklist
+  } deriving (Show, Eq)
+
+instance (A.Agent a, Serialize a, D.SizedRecord a)
+    => Universe (CachedUniverse a) where
+  type Agent (CachedUniverse a) = a
+  type Clock (CachedUniverse a) = K.PersistentCounter
+  clock = cuClock
+  setClock u c = u { cuClock=c }
+  type Logger (CachedUniverse a) = L.SimpleRotatingLogger
+  logger = cuLogger
+  setLogger u l = u { cuLogger=l }
+  type AgentDB (CachedUniverse a) = CFS.CachedFSDatabase a
+  agentDB = cuDB
+  setAgentDB u d = u { cuDB=d }
+  type AgentNamer (CachedUniverse a) = N.SimpleAgentNamer
+  agentNamer = cuNamer
+  setAgentNamer u n = u { cuNamer=n }
+  type Checklist (CachedUniverse a) = CL.PersistentChecklist
+  checklist = cuChecklist
+  setChecklist u cl = u { cuChecklist=cl }
+
+mkCachedUniverse :: String -> FilePath -> Int -> Int -> CachedUniverse a
+mkCachedUniverse name dir rotateCount cacheSize
+  = CachedUniverse c l d n cl
+  where c = K.mkPersistentCounter (dir ++ "/clock")
+        l = L.mkSimpleRotatingLogger (dir ++ "/log/") name rotateCount
+        d = CFS.mkCachedFSDatabase (dir ++ "/db") cacheSize
         n = N.mkSimpleAgentNamer (name ++ "_") (dir ++ "/namer")
         cl = CL.mkPersistentChecklist (dir ++ "/todo")
