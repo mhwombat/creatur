@@ -16,6 +16,7 @@ import ALife.Creatur.CounterQC (test)
 import ALife.Creatur.ChecklistQC (test)
 import ALife.Creatur.UniverseQC (test)
 import ALife.Creatur.Database.FileSystemQC (test)
+import ALife.Creatur.Database.CachedFileSystemQC (test)
 import ALife.Creatur.UtilQC (test)
 import ALife.Creatur.Genetics.DiploidQC (test)
 import ALife.Creatur.Genetics.RecombinationQC (test)
@@ -32,6 +33,7 @@ tests =
     ALife.Creatur.ChecklistQC.test,
     ALife.Creatur.UniverseQC.test,
     ALife.Creatur.Database.FileSystemQC.test,
+    ALife.Creatur.Database.CachedFileSystemQC.test,
     ALife.Creatur.UtilQC.test,
     ALife.Creatur.Genetics.DiploidQC.test,
     ALife.Creatur.Genetics.RecombinationQC.test,

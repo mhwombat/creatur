@@ -15,7 +15,8 @@
 module ALife.Creatur.Database
  (
     Database(..),
-    Record(..)
+    Record(..),
+    SizedRecord(..)
  ) where
 
 import Control.Monad.State (StateT)
@@ -23,7 +24,10 @@ import Data.Serialize (Serialize)
 
 class Record r where
   key :: r -> String
-  
+
+class (Record r) => SizedRecord r where
+  size :: r -> Int
+
 -- | A database offering storage and retrieval for records.
 class Database d where
   type DBRecord d
