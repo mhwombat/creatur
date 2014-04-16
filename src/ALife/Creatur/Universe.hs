@@ -16,6 +16,7 @@ module ALife.Creatur.Universe
     -- * Constructors
     Universe(..),
     SimpleUniverse,
+    CachedUniverse,
     mkSimpleUniverse,
     mkCachedUniverse,
     -- * Clock
@@ -277,7 +278,7 @@ data SimpleUniverse a = SimpleUniverse
   {
     suClock :: K.PersistentCounter,
     suLogger :: L.SimpleRotatingLogger,
-    suDB :: (FS.FSDatabase a),
+    suDB :: FS.FSDatabase a,
     suNamer :: N.SimpleAgentNamer,
     suChecklist :: CL.PersistentChecklist
   } deriving (Show, Eq)
@@ -313,7 +314,7 @@ data CachedUniverse a = CachedUniverse
   {
     cuClock :: K.PersistentCounter,
     cuLogger :: L.SimpleRotatingLogger,
-    cuDB :: (CFS.CachedFSDatabase a),
+    cuDB :: CFS.CachedFSDatabase a,
     cuNamer :: N.SimpleAgentNamer,
     cuChecklist :: CL.PersistentChecklist
   } deriving (Show, Eq)
