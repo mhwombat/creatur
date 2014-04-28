@@ -12,14 +12,14 @@
 -- This module is subject to change without notice.
 --
 ------------------------------------------------------------------------
-{-# LANGUAGE TypeFamilies, FlexibleContexts #-}
+{-# LANGUAGE TypeFamilies, FlexibleContexts, ScopedTypeVariables #-}
 module ALife.Creatur.Database.CachedFileSystemInternal where
 
 import Prelude hiding (readFile, writeFile, lookup)
 
 import ALife.Creatur.Database (Database(..), DBRecord, Record,
   SizedRecord, delete, key, keys, store, size)
-import ALife.Creatur.Database.FileSystem (FSDatabase, mkFSDatabase)
+import qualified ALife.Creatur.Database.FileSystem as FS
 import ALife.Creatur.Util (stateMap)
 import Control.Monad (when)
 import Control.Monad.State (StateT, get, gets, modify)
@@ -28,7 +28,7 @@ import Control.Monad.State (StateT, get, gets, modify)
 --   and the name of the file is the record's key.
 data CachedFSDatabase r = CachedFSDatabase
   {
-    database :: FSDatabase r,
+    database :: FS.FSDatabase r,
     cache :: [r],
     maxCacheSize :: Int
   } deriving (Show, Eq)
@@ -59,7 +59,7 @@ instance (SizedRecord r) => Database (CachedFSDatabase r) where
 
   store r = do
     addToCache r
-    withFSDB (store r)
+    withFSDB (store r :: StateT (FS.FSDatabase r) IO ())
 
   delete k = do
     deleteByKeyFromCache k
@@ -67,7 +67,7 @@ instance (SizedRecord r) => Database (CachedFSDatabase r) where
 
 withFSDB 
   :: Monad m
-    => StateT (FSDatabase r) m a -> StateT (CachedFSDatabase r) m a
+    => StateT (FS.FSDatabase r) m a -> StateT (CachedFSDatabase r) m a
 withFSDB f = do
   d <- get
   stateMap (\x -> d{database=x}) database f
@@ -95,8 +95,8 @@ deleteByKeyFromCache k
 deleteFromCache
   :: SizedRecord r
     => r -> StateT (CachedFSDatabase r) IO ()
-deleteFromCache r
-  = modify (\d -> d {cache=filter (\x -> key x /= key r) (cache d)})
+deleteFromCache r =
+  modify (\d -> d {cache=filter (\x -> key x /= key r) (cache d)})
 
 trimCache :: SizedRecord r => StateT (CachedFSDatabase r) IO ()
 trimCache = do
@@ -111,9 +111,10 @@ trim m xs = if listSize xs > m
               else xs
 
 listSize :: SizedRecord r => [r] -> Int
-listSize xs = if null xs then 0 else sum $ map size xs
+listSize [] = 0
+listSize xs = sum $ map size xs
 
 -- | @'mkFSDatabase' d@ (re)creates the FSDatabase in the
 --   directory @d@.
 mkCachedFSDatabase :: FilePath -> Int -> CachedFSDatabase r
-mkCachedFSDatabase d s = CachedFSDatabase (mkFSDatabase d) [] s
+mkCachedFSDatabase d s = CachedFSDatabase (FS.mkFSDatabase d) [] s

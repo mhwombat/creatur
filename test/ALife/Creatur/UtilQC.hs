@@ -34,8 +34,8 @@ import Test.QuickCheck (Property, property)
 
 prop_cropRect_returns_correct_size ::
   (Int, Int) -> (Int, Int) -> String -> Int -> Property
-prop_cropRect_returns_correct_size (a,b) (c, d) xs k =
-    property $ length xs' == expectedSize || length xs < expectedSize
+prop_cropRect_returns_correct_size (a,b) (c,d) xs k =
+    property $ length xs' == expectedSize || length xs < minimalOriginalSize
   where expectedSize = length is'
         is = range ((0,0),(lastRow,lastCol))
         is' = filter wanted is
@@ -44,6 +44,9 @@ prop_cropRect_returns_correct_size (a,b) (c, d) xs k =
         lastCol = constrain (-1,length xs - 1) (k - 1)
         delta = if length xs `mod` k == 0 then 0 else 1 --add partial row
         xs' = cropRect (a, b) (c, d) xs k
+        minimalOriginalSize = c*k + d + 1
+          -- the last row of the original matrix must have at least
+          -- d+1 elements
 
 -- Warning: If b < a, returns either a or x
 constrain :: Ord a => (a, a) -> a -> a

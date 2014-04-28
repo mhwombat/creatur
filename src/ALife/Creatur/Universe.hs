@@ -10,7 +10,7 @@
 -- Provides a habitat for artificial life.
 --
 ------------------------------------------------------------------------
-{-# LANGUAGE TypeFamilies, FlexibleContexts, FlexibleInstances #-}
+{-# LANGUAGE TypeFamilies, FlexibleContexts, FlexibleInstances, ScopedTypeVariables #-}
 module ALife.Creatur.Universe
   (
     -- * Constructors
@@ -51,7 +51,7 @@ module ALife.Creatur.Universe
 import Prelude hiding (lookup)
 
 import qualified ALife.Creatur as A
-import qualified ALife.Creatur.AgentNamer as N
+import qualified ALife.Creatur.Namer as N
 import qualified ALife.Creatur.Checklist as CL
 import qualified ALife.Creatur.Clock as C
 import qualified ALife.Creatur.Counter as K
@@ -68,7 +68,7 @@ import Data.Serialize (Serialize)
 
 -- | A habitat containing artificial life.
 class (C.Clock (Clock u), L.Logger (Logger u), D.Database (AgentDB u),
-  N.AgentNamer (AgentNamer u), CL.Checklist (Checklist u),
+  N.Namer (Namer u), CL.Checklist (Checklist u),
   A.Agent (Agent u), D.Record (Agent u),
   Agent u ~ D.DBRecord (AgentDB u))
       => Universe u where
@@ -82,9 +82,9 @@ class (C.Clock (Clock u), L.Logger (Logger u), D.Database (AgentDB u),
   type AgentDB u
   agentDB :: u -> AgentDB u
   setAgentDB :: u -> AgentDB u -> u
-  type AgentNamer u
-  agentNamer :: u -> AgentNamer u
-  setAgentNamer :: u -> AgentNamer u -> u
+  type Namer u
+  agentNamer :: u -> Namer u
+  setNamer :: u -> Namer u -> u
   type Checklist u
   checklist :: u -> Checklist u
   setChecklist :: u -> Checklist u -> u
@@ -108,12 +108,12 @@ withAgentDB program = do
   u <- get
   stateMap (setAgentDB u) agentDB program
 
-withAgentNamer
+withNamer
   :: (Universe u, Monad m)
-    => StateT (AgentNamer u) m a -> StateT u m a
-withAgentNamer program = do
+    => StateT (Namer u) m a -> StateT u m a
+withNamer program = do
   u <- get
-  stateMap (setAgentNamer u) agentNamer program
+  stateMap (setNamer u) agentNamer program
 
 withChecklist
   :: (Universe u, Monad m)
@@ -139,7 +139,7 @@ writeToLog msg = do
 
 -- | Generate a unique name for a new agent.
 genName :: Universe u => StateT u IO A.AgentId
-genName = withAgentNamer N.genName
+genName = withNamer N.genName
 
 -- | Returns the list of agents in the population.
 agentIds :: Universe u => StateT u IO [A.AgentId]
@@ -186,9 +186,6 @@ store
     => Agent u -> StateT u IO ()
 store a = do
   newAgent <- isNew (A.agentId a)
-  -- agentList <- agentIds
-  -- writeToLog $ "DEBUG agents:" ++ show agentList
-  -- writeToLog $ "DEBUG " ++ A.agentId a ++ " new? " ++ show newAgent
   withAgentDB (D.store a) -- Even dead agents should be stored (prior to archiving)
   if A.isAlive a
     then
@@ -200,7 +197,6 @@ store a = do
       withChecklist $ CL.delete (A.agentId a)
       writeToLog $ (A.agentId a) ++ " archived and removed from lineup"
 
--- | EXPORTED FOR TESTING ONLY
 isNew :: Universe u => A.AgentId -> StateT u IO Bool
 isNew name = fmap (name `notElem`) agentIds
 
@@ -279,11 +275,11 @@ data SimpleUniverse a = SimpleUniverse
     suClock :: K.PersistentCounter,
     suLogger :: L.SimpleRotatingLogger,
     suDB :: FS.FSDatabase a,
-    suNamer :: N.SimpleAgentNamer,
+    suNamer :: N.SimpleNamer,
     suChecklist :: CL.PersistentChecklist
   } deriving (Show, Eq)
 
-instance (A.Agent a, Serialize a) => Universe (SimpleUniverse a) where
+instance (A.Agent a, D.Record a) => Universe (SimpleUniverse a) where
   type Agent (SimpleUniverse a) = a
   type Clock (SimpleUniverse a) = K.PersistentCounter
   clock = suClock
@@ -294,9 +290,9 @@ instance (A.Agent a, Serialize a) => Universe (SimpleUniverse a) where
   type AgentDB (SimpleUniverse a) = FS.FSDatabase a
   agentDB = suDB
   setAgentDB u d = u { suDB=d }
-  type AgentNamer (SimpleUniverse a) = N.SimpleAgentNamer
+  type Namer (SimpleUniverse a) = N.SimpleNamer
   agentNamer = suNamer
-  setAgentNamer u n = u { suNamer=n }
+  setNamer u n = u { suNamer=n }
   type Checklist (SimpleUniverse a) = CL.PersistentChecklist
   checklist = suChecklist
   setChecklist u cl = u { suChecklist=cl }
@@ -307,7 +303,7 @@ mkSimpleUniverse name dir rotateCount
   where c = K.mkPersistentCounter (dir ++ "/clock")
         l = L.mkSimpleRotatingLogger (dir ++ "/log/") name rotateCount
         d = FS.mkFSDatabase (dir ++ "/db")
-        n = N.mkSimpleAgentNamer (name ++ "_") (dir ++ "/namer")
+        n = N.mkSimpleNamer (name ++ "_") (dir ++ "/namer")
         cl = CL.mkPersistentChecklist (dir ++ "/todo")
 
 data CachedUniverse a = CachedUniverse
@@ -315,12 +311,11 @@ data CachedUniverse a = CachedUniverse
     cuClock :: K.PersistentCounter,
     cuLogger :: L.SimpleRotatingLogger,
     cuDB :: CFS.CachedFSDatabase a,
-    cuNamer :: N.SimpleAgentNamer,
+    cuNamer :: N.SimpleNamer,
     cuChecklist :: CL.PersistentChecklist
   } deriving (Show, Eq)
 
-instance (A.Agent a, Serialize a, D.SizedRecord a)
-    => Universe (CachedUniverse a) where
+instance (A.Agent a, D.SizedRecord a) => Universe (CachedUniverse a) where
   type Agent (CachedUniverse a) = a
   type Clock (CachedUniverse a) = K.PersistentCounter
   clock = cuClock
@@ -331,9 +326,9 @@ instance (A.Agent a, Serialize a, D.SizedRecord a)
   type AgentDB (CachedUniverse a) = CFS.CachedFSDatabase a
   agentDB = cuDB
   setAgentDB u d = u { cuDB=d }
-  type AgentNamer (CachedUniverse a) = N.SimpleAgentNamer
+  type Namer (CachedUniverse a) = N.SimpleNamer
   agentNamer = cuNamer
-  setAgentNamer u n = u { cuNamer=n }
+  setNamer u n = u { cuNamer=n }
   type Checklist (CachedUniverse a) = CL.PersistentChecklist
   checklist = cuChecklist
   setChecklist u cl = u { cuChecklist=cl }
@@ -344,5 +339,5 @@ mkCachedUniverse name dir rotateCount cacheSize
   where c = K.mkPersistentCounter (dir ++ "/clock")
         l = L.mkSimpleRotatingLogger (dir ++ "/log/") name rotateCount
         d = CFS.mkCachedFSDatabase (dir ++ "/db") cacheSize
-        n = N.mkSimpleAgentNamer (name ++ "_") (dir ++ "/namer")
+        n = N.mkSimpleNamer (name ++ "_") (dir ++ "/namer")
         cl = CL.mkPersistentChecklist (dir ++ "/todo")
