@@ -37,7 +37,6 @@ import ALife.Creatur.Universe (Universe, Agent, AgentProgram,
   withAgent, withAgents, incTime)
 import Control.Conditional (whenM)
 import Control.Exception (SomeException)
-import Control.Monad (when)
 import Control.Monad.State (StateT, execStateT)
 import Data.Serialize (Serialize)
 
@@ -60,18 +59,25 @@ shutdownHandler u = do
   _ <- execStateT (writeToLog "Shutdown requested") u
   return ()
 
-exceptionHandler :: Universe u => u -> SomeException -> IO u
-exceptionHandler u x = execStateT (writeToLog ("WARNING: " ++ show x)) u
+exceptionHandler :: Universe u => u -> SomeException -> IO (Bool, u)
+exceptionHandler u x = do
+  u' <- execStateT (writeToLog ("WARNING: " ++ show x)) u
+  return (True, u')
 
 runNoninteractingAgents
   :: (Universe u, Serialize (Agent u))
-    => AgentProgram u -> SummaryProgram u -> StateT u IO ()
+    => AgentProgram u -> SummaryProgram u -> StateT u IO Bool
 runNoninteractingAgents agentProgram summaryProgram = do
   atEndOfRound summaryProgram
-  (a:_) <- lineup
-  markDone a
-    -- do that first in case the next line triggers an exception
-  withAgent agentProgram a
+  as <- lineup
+  if null as
+    then return False
+    else do
+      let a = head as
+      markDone a
+      -- do that first in case the next line triggers an exception
+      withAgent agentProgram a
+      return True
 
 --   The input parameter is a list of agents. The first agent in the
 --   list is the agent whose turn it is to use the CPU. The rest of
@@ -84,13 +90,21 @@ runNoninteractingAgents agentProgram summaryProgram = do
 
 runInteractingAgents
   :: (Universe u, Serialize (Agent u))
-    => AgentsProgram u -> SummaryProgram u -> StateT u IO ()
-runInteractingAgents agentsProgram summaryProgram = do
+    => AgentsProgram u -> Int -> SummaryProgram u -> StateT u IO Bool
+runInteractingAgents agentsProgram minAgents summaryProgram = do
   atEndOfRound summaryProgram
   as <- lineup
-  when (not $ null as) $ markDone (head as)
-    -- do that first in case the next line triggers an exception
-  withAgents agentsProgram as
+  if length (take minAgents as) < minAgents -- efficient way of checking length, I think
+    then do
+      writeToLog "Population too small"
+      summaryProgram
+      writeToLog "Requesting shutdown (population too small)"
+      return False
+    else do
+      markDone (head as)
+      -- do that first in case the next line triggers an exception
+      withAgents agentsProgram as
+      return True
 
 atEndOfRound
   :: Universe u 

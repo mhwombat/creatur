@@ -22,7 +22,8 @@ module ALife.Creatur.Daemon
 import Control.Concurrent (MVar, newMVar, readMVar, swapMVar, 
   threadDelay)
 import Control.Exception (SomeException, handle, catch)
-import Control.Monad.State (StateT, execStateT)
+import Control.Monad (when)
+import Control.Monad.State (StateT, runStateT)
 import System.IO (hPutStr, stderr)
 import System.IO.Unsafe (unsafePerformIO)
 import System.Posix.Daemonize (CreateDaemon(..), serviced, simpleDaemon)
@@ -39,9 +40,9 @@ data Daemon s = Daemon
   {
     onStartup :: s -> IO s,
     onShutdown :: s -> IO (),
-    onException :: s -> SomeException -> IO s,
+    onException :: s -> SomeException -> IO (Bool, s),
     -- | The agent task.
-    task :: StateT s IO (),
+    task :: StateT s IO Bool,
     username :: String,
     -- | Number of microseconds to sleep between agent tasks.
     sleepTime :: Int
@@ -75,13 +76,13 @@ daemonMain d s _ = do
 
 daemonMainLoop :: Daemon s -> s -> IO ()
 daemonMainLoop d s = do
-  threadDelay $ sleepTime d
-  timeToStop <- readMVar termReceived
-  if timeToStop 
-    then onShutdown d s
-    else do
-      s' <- handle (onException d s) $ execStateT (task d) s
+  stopRequested <- readMVar termReceived
+  when (not stopRequested) $ do
+    (continue, s') <- handle (onException d s) $ runStateT (task d) s
+    when continue $ do
+      threadDelay $ sleepTime d
       daemonMainLoop d s'
+  onShutdown d s
 
 wrap :: IO () -> IO ()
 wrap t = catch t
