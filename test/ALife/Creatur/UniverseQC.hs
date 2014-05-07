@@ -46,11 +46,11 @@ testUniverseCreation = withSystemTempDirectory "creaturTest.tmp" testUniverseCre
 
 testUniverseCreation' :: FilePath -> IO ()
 testUniverseCreation' dir = do
-  let dirname = dir ++ "/universe"
-  let u = mkSimpleUniverse "wombat" dirname 1000 :: SimpleUniverse TestAgent
+  let logFileName = dir ++ "/universe"
+  let u = mkSimpleUniverse "wombat" logFileName :: SimpleUniverse TestAgent
   (t, u2) <- runStateT currentTime u
   assertEqual "test1" 0 t
-  dirExists <- doesDirectoryExist dirname
+  dirExists <- doesDirectoryExist logFileName
   assertBool "universe created too early" (not dirExists)
 
   u3 <- execStateT incTime u2
@@ -58,7 +58,7 @@ testUniverseCreation' dir = do
   assertEqual "test2" 1 t2
 
   -- Re-read the time. Was it updated properly?
-  let u4 = mkSimpleUniverse "wombat" dirname 1000 :: SimpleUniverse TestAgent
+  let u4 = mkSimpleUniverse "wombat" logFileName :: SimpleUniverse TestAgent
   t3 <- evalStateT currentTime u4
   assertEqual "test3" 1 t3
 
@@ -67,7 +67,7 @@ testUniverseCreation' dir = do
   assertEqual "test4" 2 t4
 
   -- Re-read the counter. Was it updated properly?
-  let u6 = mkSimpleUniverse "wombat" dirname 1000 :: SimpleUniverse TestAgent
+  let u6 = mkSimpleUniverse "wombat" logFileName :: SimpleUniverse TestAgent
   t5 <- evalStateT currentTime u6
   assertEqual "test5" 2 t5
 
@@ -76,8 +76,8 @@ testUniverseDB = withSystemTempDirectory "creaturTest.tmp" testUniverseDB'
 
 testUniverseDB' :: FilePath -> IO ()
 testUniverseDB' dir = do
-  let dirname = dir ++ "/universe"
-  let u = mkSimpleUniverse "wombat" dirname 1000 :: SimpleUniverse TestAgent
+  let logFileName = dir ++ "/universe"
+  let u = mkSimpleUniverse "wombat" logFileName :: SimpleUniverse TestAgent
   let a = TestAgent "agent_a" True
   u2 <- execStateT (store a) u
   xs <- evalStateT agentIds u2
@@ -86,10 +86,10 @@ testUniverseDB' dir = do
   u3 <- execStateT (store a2) u2
   xs' <- evalStateT agentIds u3
   assertBool "agent still in agentIds list" ((A.agentId a) `notElem` xs')
-  let f = dirname ++ "/db/" ++ A.agentId a
+  let f = logFileName ++ "/db/" ++ A.agentId a
   fileExists <- doesFileExist f
   assertBool "agent file not removed" (not fileExists)
-  let f2 = dirname ++ "/db/archive/" ++ A.agentId a
+  let f2 = logFileName ++ "/db/archive/" ++ A.agentId a
   fileExists2 <- doesFileExist f2
   assertBool "agent file not archived" (fileExists2)
 
@@ -98,8 +98,8 @@ testUniverseLineup = withSystemTempDirectory "creaturTest.tmp" testUniverseLineu
 
 testUniverseLineup' :: FilePath -> IO ()
 testUniverseLineup' dir = do
-  let dirname = dir ++ "/universe"
-  let u = mkSimpleUniverse "wombat" dirname 1000 :: SimpleUniverse TestAgent
+  let logFileName = dir ++ "/universe"
+  let u = mkSimpleUniverse "wombat" logFileName :: SimpleUniverse TestAgent
   let a = TestAgent "agent_a" True
   let b = TestAgent "agent_b" True
   let c = TestAgent "agent_c" True

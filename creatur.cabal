@@ -1,5 +1,5 @@
 Name:              creatur
-Version:           5.4.0
+Version:           5.4.1
 Stability:         experimental
 Synopsis:          Framework for artificial life experiments.
 Description:       A software framework for automating experiments
@@ -36,7 +36,7 @@ source-repository head
 source-repository this
   type:     git
   location: https://github.com/mhwombat/creatur.git
-  tag:      5.3.2
+  tag:      5.4.1
 
 library
   GHC-Options:      -Wall -fno-warn-orphans
@@ -59,6 +59,8 @@ library
                     ALife.Creatur.Genetics.Reproduction.Sexual,
                     ALife.Creatur.Genetics.Reproduction.SimplifiedSexual,
                     ALife.Creatur.Logger,
+                    ALife.Creatur.Logger.SimpleLogger,
+                    ALife.Creatur.Logger.SimpleRotatingLogger,
                     ALife.Creatur.Namer,
                     ALife.Creatur.Universe,
                     ALife.Creatur.Task,

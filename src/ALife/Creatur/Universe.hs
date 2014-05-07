@@ -59,6 +59,7 @@ import qualified ALife.Creatur.Database as D
 import qualified ALife.Creatur.Database.FileSystem as FS
 import qualified ALife.Creatur.Database.CachedFileSystem as CFS
 import qualified ALife.Creatur.Logger as L
+import qualified ALife.Creatur.Logger.SimpleLogger as SL
 import ALife.Creatur.Util (stateMap, shuffle)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Random (evalRandIO)
@@ -273,7 +274,7 @@ shuffledAgentIds
 data SimpleUniverse a = SimpleUniverse
   {
     suClock :: K.PersistentCounter,
-    suLogger :: L.SimpleRotatingLogger,
+    suLogger :: SL.SimpleLogger,
     suDB :: FS.FSDatabase a,
     suNamer :: N.SimpleNamer,
     suChecklist :: CL.PersistentChecklist
@@ -284,7 +285,7 @@ instance (A.Agent a, D.Record a) => Universe (SimpleUniverse a) where
   type Clock (SimpleUniverse a) = K.PersistentCounter
   clock = suClock
   setClock u c = u { suClock=c }
-  type Logger (SimpleUniverse a) = L.SimpleRotatingLogger
+  type Logger (SimpleUniverse a) = SL.SimpleLogger
   logger = suLogger
   setLogger u l = u { suLogger=l }
   type AgentDB (SimpleUniverse a) = FS.FSDatabase a
@@ -297,11 +298,11 @@ instance (A.Agent a, D.Record a) => Universe (SimpleUniverse a) where
   checklist = suChecklist
   setChecklist u cl = u { suChecklist=cl }
 
-mkSimpleUniverse :: String -> FilePath -> Int -> SimpleUniverse a
-mkSimpleUniverse name dir rotateCount
+mkSimpleUniverse :: String -> FilePath -> SimpleUniverse a
+mkSimpleUniverse name dir
   = SimpleUniverse c l d n cl
   where c = K.mkPersistentCounter (dir ++ "/clock")
-        l = L.mkSimpleRotatingLogger (dir ++ "/log/") name rotateCount
+        l = SL.mkSimpleLogger (dir ++ "/log/" ++ name ++ ".log")
         d = FS.mkFSDatabase (dir ++ "/db")
         n = N.mkSimpleNamer (name ++ "_") (dir ++ "/namer")
         cl = CL.mkPersistentChecklist (dir ++ "/todo")
@@ -309,7 +310,7 @@ mkSimpleUniverse name dir rotateCount
 data CachedUniverse a = CachedUniverse
   {
     cuClock :: K.PersistentCounter,
-    cuLogger :: L.SimpleRotatingLogger,
+    cuLogger :: SL.SimpleLogger,
     cuDB :: CFS.CachedFSDatabase a,
     cuNamer :: N.SimpleNamer,
     cuChecklist :: CL.PersistentChecklist
@@ -320,7 +321,7 @@ instance (A.Agent a, D.SizedRecord a) => Universe (CachedUniverse a) where
   type Clock (CachedUniverse a) = K.PersistentCounter
   clock = cuClock
   setClock u c = u { cuClock=c }
-  type Logger (CachedUniverse a) = L.SimpleRotatingLogger
+  type Logger (CachedUniverse a) = SL.SimpleLogger
   logger = cuLogger
   setLogger u l = u { cuLogger=l }
   type AgentDB (CachedUniverse a) = CFS.CachedFSDatabase a
@@ -333,11 +334,11 @@ instance (A.Agent a, D.SizedRecord a) => Universe (CachedUniverse a) where
   checklist = cuChecklist
   setChecklist u cl = u { cuChecklist=cl }
 
-mkCachedUniverse :: String -> FilePath -> Int -> Int -> CachedUniverse a
-mkCachedUniverse name dir rotateCount cacheSize
+mkCachedUniverse :: String -> FilePath -> Int -> CachedUniverse a
+mkCachedUniverse name dir cacheSize
   = CachedUniverse c l d n cl
   where c = K.mkPersistentCounter (dir ++ "/clock")
-        l = L.mkSimpleRotatingLogger (dir ++ "/log/") name rotateCount
+        l = SL.mkSimpleLogger (dir ++ "/log/" ++ name ++ ".log")
         d = CFS.mkCachedFSDatabase (dir ++ "/db") cacheSize
         n = N.mkSimpleNamer (name ++ "_") (dir ++ "/namer")
         cl = CL.mkPersistentChecklist (dir ++ "/todo")
