@@ -68,7 +68,7 @@ cutAndSplice n m (as, bs) = (cs, ds)
 
 -- | Same as @'cutAndSplice'@, except that the two locations are
 --   chosen at random.
-randomCutAndSplice :: (RandomGen g) => ([a], [a]) -> Rand g ([a], [a])
+randomCutAndSplice :: RandomGen g => ([a], [a]) -> Rand g ([a], [a])
 randomCutAndSplice (as, bs) = do
     n <- getRandomR (0,length as - 1)
     m <- getRandomR (0,length bs - 1)
@@ -81,7 +81,7 @@ crossover n = cutAndSplice n n
 
 -- | Same as @'crossover'@, except that the location is chosen at 
 --   random.
-randomCrossover :: (RandomGen g) => ([a], [a]) -> Rand g ([a], [a])
+randomCrossover :: RandomGen g => ([a], [a]) -> Rand g ([a], [a])
 randomCrossover (as, bs) = do
     n <- getRandomR (0,length as - 1)
     return (crossover n (as, bs))
@@ -134,19 +134,19 @@ repeatWithProbability p op genes = do
 
 -- | Randomly select a boolean, but weighted to return True with probability 
 --   p.
-weightedRandomBoolean :: (RandomGen g) => Double -> Rand g Bool
+weightedRandomBoolean :: RandomGen g => Double -> Rand g Bool
 weightedRandomBoolean p = do
   x <- getRandomR (0.0,1.0)
   return (x < p)
 
-randomOneOfPair :: (RandomGen g) => (a, a) -> Rand g a
+randomOneOfPair :: RandomGen g => (a, a) -> Rand g a
 randomOneOfPair pair = do
   chooseFst <- weightedRandomBoolean 0.5
   if chooseFst 
     then return $ fst pair
     else return $ snd pair
 
-randomOneOfList :: (RandomGen g) => [a] -> Rand g a
+randomOneOfList :: RandomGen g => [a] -> Rand g a
 randomOneOfList xs = do
   (_, z) <- randomListSelection xs
   return z
@@ -154,7 +154,7 @@ randomOneOfList xs = do
 ---- | Sample a random element from a weighted list.
 ----   The total weight of all elements must not be 0.
 ---- Adapted from the code in MonadRandom
---randomWeightedChoice :: (RandomGen g) => [(a, Double)] -> Rand g a
+--randomWeightedChoice :: RandomGen g => [(a, Double)] -> Rand g a
 --randomWeightedChoice [] = error "randomFromList called with empty list"
 --randomWeightedChoice [(x,_)] = return x
 --randomWeightedChoice xs = do
@@ -165,7 +165,7 @@ randomOneOfList xs = do
 
 -- | Choose an element at random from a list and return the element and its 
 --   index
-randomListSelection :: (RandomGen g) => [a] -> Rand g (Int, a)
+randomListSelection :: RandomGen g => [a] -> Rand g (Int, a)
 randomListSelection xs = do
   i <- getRandomR (0,length xs - 1)
   return (i, xs !! i)

@@ -90,21 +90,29 @@ runNoninteractingAgents agentProgram summaryProgram = do
 
 runInteractingAgents
   :: (Universe u, Serialize (Agent u))
-    => AgentsProgram u -> Int -> SummaryProgram u -> StateT u IO Bool
-runInteractingAgents agentsProgram minAgents summaryProgram = do
+    => AgentsProgram u -> (Int, Int) -> SummaryProgram u -> StateT u IO Bool
+runInteractingAgents agentsProgram (minAgents, maxAgents) summaryProgram = do
   atEndOfRound summaryProgram
   as <- lineup
-  if length (take minAgents as) < minAgents -- efficient way of checking length, I think
+  let n = length as
+  if n < minAgents
     then do
       writeToLog "Population too small"
       summaryProgram
       writeToLog "Requesting shutdown (population too small)"
       return False
-    else do
-      markDone (head as)
-      -- do that first in case the next line triggers an exception
-      withAgents agentsProgram as
-      return True
+    else
+      if n > maxAgents
+        then do
+          writeToLog "Population too big"
+          summaryProgram
+          writeToLog "Requesting shutdown (population too big)"
+          return False
+        else do
+          markDone (head as)
+          -- do that first in case the next line triggers an exception
+          withAgents agentsProgram as
+          return True
 
 atEndOfRound
   :: Universe u 
