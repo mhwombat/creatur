@@ -41,7 +41,8 @@ source-repository this
 library
   GHC-Options:      -Wall -fno-warn-orphans
   Hs-source-dirs:   src
-  exposed-modules:  ALife.Creatur,
+  exposed-modules:  
+                    ALife.Creatur,
                     ALife.Creatur.Checklist,
                     ALife.Creatur.Clock,
                     ALife.Creatur.Counter,

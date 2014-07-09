@@ -8,8 +8,8 @@
 -- Portability :  portable
 --
 -- Provides tasks that you can use with a daemon. These tasks handle
--- reading and writing agents, which reduces the amount of code you
--- need to write. 
+-- reading and writing agents, and various other housekeeping chores,
+-- which reduces the amount of code you need to write. 
 --
 -- It’s also easy to write your own tasks, using these as a guide.)
 --
