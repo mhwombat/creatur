@@ -95,6 +95,7 @@ runInteractingAgents agentsProgram (minAgents, maxAgents) summaryProgram = do
   atEndOfRound summaryProgram
   as <- lineup
   let n = length as
+  writeToLog $ "Pop. size=" ++ show n
   if n < minAgents
     then do
       writeToLog "Population too small"
