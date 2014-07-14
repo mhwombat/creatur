@@ -103,7 +103,7 @@ testUniverseLineup' dir = do
   let a = TestAgent "agent_a" True
   let b = TestAgent "agent_b" True
   let c = TestAgent "agent_c" True
-  u2 <- execStateT (store a >> store b >> store c >> refresh) u
+  u2 <- execStateT (store a >> store b >> store c >> refreshLineup) u
   xs <- evalStateT lineup u2
   assertBool "agent not in lineup" ((A.agentId a) `elem` xs)
   let a2 = a { aIsAlive=False }

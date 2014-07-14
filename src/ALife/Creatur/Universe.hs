@@ -43,9 +43,12 @@ module ALife.Creatur.Universe
     isNew, -- exported for testing only
     -- * Agent rotation
     lineup,
+    startOfRound,
     endOfRound,
-    refresh,
-    markDone
+    refreshLineup,
+    markDone,
+    replenishEnergyPool,
+    withdrawEnergy
  ) where
 
 import Prelude hiding (lookup)
@@ -60,6 +63,7 @@ import qualified ALife.Creatur.Database.FileSystem as FS
 import qualified ALife.Creatur.Database.CachedFileSystem as CFS
 import qualified ALife.Creatur.Logger as L
 import qualified ALife.Creatur.Logger.SimpleLogger as SL
+import qualified ALife.Creatur.EnergyPool as E
 import ALife.Creatur.Util (stateMap, shuffle)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Random (evalRandIO)
@@ -70,7 +74,7 @@ import Data.Serialize (Serialize)
 -- | A habitat containing artificial life.
 class (C.Clock (Clock u), L.Logger (Logger u), D.Database (AgentDB u),
   N.Namer (Namer u), CL.Checklist (Checklist u),
-  A.Agent (Agent u), D.Record (Agent u),
+  E.EnergyPool (EnergyPool u), A.Agent (Agent u), D.Record (Agent u),
   Agent u ~ D.DBRecord (AgentDB u))
       => Universe u where
   type Agent u
@@ -89,6 +93,9 @@ class (C.Clock (Clock u), L.Logger (Logger u), D.Database (AgentDB u),
   type Checklist u
   checklist :: u -> Checklist u
   setChecklist :: u -> Checklist u -> u
+  type EnergyPool u
+  energyPool :: u -> EnergyPool u
+  setEnergyPool :: u -> EnergyPool u -> u
 
 withClock :: (Universe u, Monad m) => StateT (Clock u) m a -> StateT u m a
 withClock program = do
@@ -122,6 +129,13 @@ withChecklist
 withChecklist program = do
   u <- get
   stateMap (setChecklist u) checklist program
+
+withEnergyPool
+  :: (Universe u, Monad m)
+    => StateT (EnergyPool u) m a -> StateT u m a
+withEnergyPool program = do
+  u <- get
+  stateMap (setEnergyPool u) energyPool program
 
 -- | The current "time" (counter) in this universe
 currentTime :: Universe u => StateT u IO A.Time
@@ -243,22 +257,27 @@ withAgents program names = do
       program as >>= mapM_ store
 
 -- | Returns the current lineup of (living) agents in the universe.
---   Note: Check for @'endOfRound'@ and call @'refresh'@ if needed
+--   Note: Check for @'endOfRound'@ and call @'refreshLineup'@ if needed
 --   before invoking this function.
 lineup :: Universe u => StateT u IO [A.AgentId]
 lineup = do
   (xs,ys) <- withChecklist CL.status
   return $ xs ++ ys
 
+-- | Returns true if no agents have yet their turn at the CPU for this
+--   round.
+startOfRound :: Universe u => StateT u IO Bool
+startOfRound = withChecklist CL.notStarted
+
 -- | Returns true if the lineup is empty or if all of the agents in the
---   lineup have had their turn at the CPU.
+--   lineup have had their turn at the CPU for this round.
 endOfRound :: Universe u => StateT u IO Bool
 endOfRound = withChecklist CL.done
 
 -- | Creates a fresh lineup containing all of the agents in the
 --   population, in random order.
-refresh :: Universe u => StateT u IO ()
-refresh = do
+refreshLineup :: Universe u => StateT u IO ()
+refreshLineup = do
   as <- shuffledAgentIds
   withChecklist (CL.setItems as)
 
@@ -271,13 +290,30 @@ shuffledAgentIds :: Universe u => StateT u IO [String]
 shuffledAgentIds
   = agentIds >>= liftIO . evalRandIO . shuffle
 
+-- | Replenish the energy pool
+replenishEnergyPool :: Universe u => Double -> StateT u IO ()
+replenishEnergyPool e = do
+  withEnergyPool (E.replenish e)
+  y <- withEnergyPool E.available
+  writeToLog $ "Replenished energy pool, " ++ show y ++ " available"
+
+-- | Withdraw energy from the pool
+withdrawEnergy :: Universe u => Double -> StateT u IO Double
+withdrawEnergy e = do
+  x <- withEnergyPool (E.withdraw e)
+  y <- withEnergyPool E.available
+  writeToLog $ "Withdrew " ++ show x ++ " from energy pool, "
+    ++ show y ++ " available"
+  return x
+
 data SimpleUniverse a = SimpleUniverse
   {
     suClock :: K.PersistentCounter,
     suLogger :: SL.SimpleLogger,
     suDB :: FS.FSDatabase a,
     suNamer :: N.SimpleNamer,
-    suChecklist :: CL.PersistentChecklist
+    suChecklist :: CL.PersistentChecklist,
+    suEnergyPool :: E.PersistentEnergyPool
   } deriving (Show, Eq)
 
 instance (A.Agent a, D.Record a) => Universe (SimpleUniverse a) where
@@ -297,15 +333,19 @@ instance (A.Agent a, D.Record a) => Universe (SimpleUniverse a) where
   type Checklist (SimpleUniverse a) = CL.PersistentChecklist
   checklist = suChecklist
   setChecklist u cl = u { suChecklist=cl }
+  type EnergyPool (SimpleUniverse a) = E.PersistentEnergyPool
+  energyPool = suEnergyPool
+  setEnergyPool u cl = u { suEnergyPool=cl }
 
 mkSimpleUniverse :: String -> FilePath -> SimpleUniverse a
 mkSimpleUniverse name dir
-  = SimpleUniverse c l d n cl
+  = SimpleUniverse c l d n cl e
   where c = K.mkPersistentCounter (dir ++ "/clock")
         l = SL.mkSimpleLogger (dir ++ "/log/" ++ name ++ ".log")
         d = FS.mkFSDatabase (dir ++ "/db")
         n = N.mkSimpleNamer (name ++ "_") (dir ++ "/namer")
         cl = CL.mkPersistentChecklist (dir ++ "/todo")
+        e = E.mkPersistentEnergyPool (dir ++ "/energy")
 
 data CachedUniverse a = CachedUniverse
   {
@@ -313,7 +353,8 @@ data CachedUniverse a = CachedUniverse
     cuLogger :: SL.SimpleLogger,
     cuDB :: CFS.CachedFSDatabase a,
     cuNamer :: N.SimpleNamer,
-    cuChecklist :: CL.PersistentChecklist
+    cuChecklist :: CL.PersistentChecklist,
+    cuEnergyPool :: E.PersistentEnergyPool
   } deriving (Show, Eq)
 
 instance (A.Agent a, D.SizedRecord a) => Universe (CachedUniverse a) where
@@ -333,12 +374,16 @@ instance (A.Agent a, D.SizedRecord a) => Universe (CachedUniverse a) where
   type Checklist (CachedUniverse a) = CL.PersistentChecklist
   checklist = cuChecklist
   setChecklist u cl = u { cuChecklist=cl }
+  type EnergyPool (CachedUniverse a) = E.PersistentEnergyPool
+  energyPool = cuEnergyPool
+  setEnergyPool u cl = u { cuEnergyPool=cl }
 
 mkCachedUniverse :: String -> FilePath -> Int -> CachedUniverse a
 mkCachedUniverse name dir cacheSize
-  = CachedUniverse c l d n cl
+  = CachedUniverse c l d n cl e
   where c = K.mkPersistentCounter (dir ++ "/clock")
         l = SL.mkSimpleLogger (dir ++ "/log/" ++ name ++ ".log")
         d = CFS.mkCachedFSDatabase (dir ++ "/db") cacheSize
         n = N.mkSimpleNamer (name ++ "_") (dir ++ "/namer")
         cl = CL.mkPersistentChecklist (dir ++ "/todo")
+        e = E.mkPersistentEnergyPool (dir ++ "/energy")

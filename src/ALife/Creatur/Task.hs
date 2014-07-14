@@ -28,13 +28,13 @@ module ALife.Creatur.Task
     startupHandler,
     shutdownHandler,
     exceptionHandler,
-    noSummary
+    nothing
  ) where
 
 import ALife.Creatur.Daemon (Daemon(..))
 import ALife.Creatur.Universe (Universe, Agent, AgentProgram,
-  AgentsProgram, writeToLog, lineup, refresh, markDone, endOfRound,
-  withAgent, withAgents, incTime)
+  AgentsProgram, writeToLog, lineup, refreshLineup, markDone, endOfRound,
+  withAgent, withAgents, incTime, popSize)
 import Control.Conditional (whenM)
 import Control.Exception (SomeException)
 import Control.Monad.State (StateT, execStateT)
@@ -66,9 +66,11 @@ exceptionHandler u x = do
 
 runNoninteractingAgents
   :: (Universe u, Serialize (Agent u))
-    => AgentProgram u -> SummaryProgram u -> StateT u IO Bool
-runNoninteractingAgents agentProgram summaryProgram = do
-  atEndOfRound summaryProgram
+    => AgentProgram u -> (Int, Int) -> StateT u IO () -> StateT u IO ()
+      -> StateT u IO Bool
+runNoninteractingAgents agentProgram popRange startRoundProgram
+    endRoundProgram = do
+  atStartOfRound startRoundProgram
   as <- lineup
   if null as
     then return False
@@ -77,7 +79,8 @@ runNoninteractingAgents agentProgram summaryProgram = do
       markDone a
       -- do that first in case the next line triggers an exception
       withAgent agentProgram a
-      return True
+      atEndOfRound endRoundProgram
+      popSizeInBounds popRange
 
 --   The input parameter is a list of agents. The first agent in the
 --   list is the agent whose turn it is to use the CPU. The rest of
@@ -90,49 +93,48 @@ runNoninteractingAgents agentProgram summaryProgram = do
 
 runInteractingAgents
   :: (Universe u, Serialize (Agent u))
-    => AgentsProgram u -> (Int, Int) -> SummaryProgram u -> StateT u IO Bool
-runInteractingAgents agentsProgram (minAgents, maxAgents) summaryProgram = do
-  atEndOfRound summaryProgram
+    => AgentsProgram u -> (Int, Int) -> StateT u IO () -> StateT u IO ()
+      -> StateT u IO Bool
+runInteractingAgents agentsProgram popRange startRoundProgram
+    endRoundProgram = do
+  atStartOfRound startRoundProgram
   as <- lineup
-  let n = length as
-  writeToLog $ "Pop. size=" ++ show n
+  markDone (head as)
+  -- do that first in case the next line triggers an exception
+  withAgents agentsProgram as
+  atEndOfRound endRoundProgram
+  popSizeInBounds popRange
+
+popSizeInBounds :: Universe u => (Int, Int) -> StateT u IO Bool
+popSizeInBounds (minAgents, maxAgents) = do
+  n <- popSize
   if n < minAgents
     then do
-      writeToLog "Population too small"
-      summaryProgram
       writeToLog "Requesting shutdown (population too small)"
       return False
     else
       if n > maxAgents
         then do
-          writeToLog "Population too big"
-          summaryProgram
           writeToLog "Requesting shutdown (population too big)"
           return False
-        else do
-          markDone (head as)
-          -- do that first in case the next line triggers an exception
-          withAgents agentsProgram as
-          return True
+        else return True
 
-atEndOfRound
-  :: Universe u 
-    => SummaryProgram u -> StateT u IO ()
-atEndOfRound summaryProgram = do
+atStartOfRound :: Universe u => StateT u IO () -> StateT u IO ()
+atStartOfRound program = do
   whenM endOfRound $ do
-    writeToLog "End of round"
-    summaryProgram
-    refresh
+    refreshLineup
     incTime
     writeToLog "Beginning of round"
+    program
 
--- | A program that processes the outputs from all the agent programs.
---   For example, this program might aggregate the statistics and
---   record the result.
-type SummaryProgram u = StateT u IO ()
+atEndOfRound :: Universe u => StateT u IO () -> StateT u IO ()
+atEndOfRound program = do
+  whenM endOfRound $ do
+    writeToLog "End of round"
+    program
 
-noSummary :: SummaryProgram u
-noSummary = return ()
+nothing :: StateT u IO ()
+nothing = return ()
 
 -- Note: There's no reason for the checklist type to be a parameter of
 -- the Universe type. Users don't interact directly with it, so they
