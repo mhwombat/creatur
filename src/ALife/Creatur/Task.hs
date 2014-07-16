@@ -108,6 +108,7 @@ runInteractingAgents agentsProgram popRange startRoundProgram
 popSizeInBounds :: Universe u => (Int, Int) -> StateT u IO Bool
 popSizeInBounds (minAgents, maxAgents) = do
   n <- popSize
+  writeToLog $ "Pop. size=" ++ show n
   if n < minAgents
     then do
       writeToLog "Requesting shutdown (population too small)"
