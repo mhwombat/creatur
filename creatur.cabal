@@ -13,15 +13,15 @@ Description:       A software framework for automating experiments
                    tutorial at 
                    <https://github.com/mhwombat/creatur-examples/raw/master/Tutorial.pdf>
                    for examples on how to use the
-                   Cr&#233;at&#250;r framework.
+                   Créatúr framework.
                    .
-                   About the name: \"Cr&#233;at&#250;r\" (pronounced kray-toor)
+                   About the name: \"Créatúr\" (pronounced kray-toor)
                    is an irish word meaning animal, creature, or an 
                    unfortunate person.
 Category:          AI
 License:           BSD3
 License-file:      LICENSE
-Copyright:         (c) Amy de Buitl&#233;ir 2010-2014
+Copyright:         (c) Amy de Buitléir 2010-2014
 Homepage:          https://github.com/mhwombat/creatur
 Bug-reports:       https://github.com/mhwombat/creatur/issues
 Author:            Amy de Buitl&#233;ir
