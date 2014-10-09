@@ -28,7 +28,8 @@ module ALife.Creatur.Task
     startupHandler,
     shutdownHandler,
     exceptionHandler,
-    nothing
+    -- nothing,
+    requestShutdown
  ) where
 
 import ALife.Creatur.Daemon (Daemon(..))
@@ -128,8 +129,8 @@ atEndOfRound program = do
     writeToLog "End of round"
     program
 
-nothing :: StateT u IO ()
-nothing = return ()
+-- nothing :: StateT u IO ()
+-- nothing = return ()
 
 -- Note: There's no reason for the checklist type to be a parameter of
 -- the Universe type. Users don't interact directly with it, so they
