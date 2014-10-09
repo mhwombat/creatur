@@ -32,12 +32,15 @@ module ALife.Creatur.Task
  ) where
 
 import ALife.Creatur.Daemon (Daemon(..))
+import qualified ALife.Creatur.Daemon as D
 import ALife.Creatur.Universe (Universe, Agent, AgentProgram,
   AgentsProgram, writeToLog, lineup, refreshLineup, markDone, endOfRound,
   withAgent, withAgents, incTime, popSize)
 import Control.Conditional (whenM)
 import Control.Exception (SomeException)
-import Control.Monad.State (StateT, execStateT)
+import Control.Monad (when)
+import Control.Monad.State (StateT, execStateT, evalStateT)
+import Control.Monad.Trans.Class (lift)
 import Data.Serialize (Serialize)
 
 simpleDaemon :: Universe u => Daemon u
@@ -55,32 +58,26 @@ startupHandler :: Universe u => u -> IO u
 startupHandler = execStateT (writeToLog $ "Starting")
 
 shutdownHandler :: Universe u => u -> IO ()
-shutdownHandler u = do
-  _ <- execStateT (writeToLog "Shutdown requested") u
-  return ()
+shutdownHandler u = evalStateT (writeToLog "Shutdown requested") u
 
-exceptionHandler :: Universe u => u -> SomeException -> IO (Bool, u)
-exceptionHandler u x = do
-  u' <- execStateT (writeToLog ("WARNING: " ++ show x)) u
-  return (True, u')
+exceptionHandler :: Universe u => u -> SomeException -> IO u
+exceptionHandler u x = execStateT (writeToLog ("WARNING: " ++ show x)) u
 
 runNoninteractingAgents
   :: (Universe u, Serialize (Agent u))
     => AgentProgram u -> (Int, Int) -> StateT u IO () -> StateT u IO ()
-      -> StateT u IO Bool
+      -> StateT u IO ()
 runNoninteractingAgents agentProgram popRange startRoundProgram
     endRoundProgram = do
   atStartOfRound startRoundProgram
   as <- lineup
-  if null as
-    then return False
-    else do
-      let a = head as
-      markDone a
-      -- do that first in case the next line triggers an exception
-      withAgent agentProgram a
-      atEndOfRound endRoundProgram
-      popSizeInBounds popRange
+  when (not . null $ as) $ do
+    let a = head as
+    markDone a
+    -- do that first in case the next line triggers an exception
+    withAgent agentProgram a
+    atEndOfRound endRoundProgram
+    checkPopSize popRange
 
 --   The input parameter is a list of agents. The first agent in the
 --   list is the agent whose turn it is to use the CPU. The rest of
@@ -94,7 +91,7 @@ runNoninteractingAgents agentProgram popRange startRoundProgram
 runInteractingAgents
   :: (Universe u, Serialize (Agent u))
     => AgentsProgram u -> (Int, Int) -> StateT u IO () -> StateT u IO ()
-      -> StateT u IO Bool
+      -> StateT u IO ()
 runInteractingAgents agentsProgram popRange startRoundProgram
     endRoundProgram = do
   atStartOfRound startRoundProgram
@@ -103,22 +100,19 @@ runInteractingAgents agentsProgram popRange startRoundProgram
   -- do that first in case the next line triggers an exception
   withAgents agentsProgram as
   atEndOfRound endRoundProgram
-  popSizeInBounds popRange
+  checkPopSize popRange
 
-popSizeInBounds :: Universe u => (Int, Int) -> StateT u IO Bool
-popSizeInBounds (minAgents, maxAgents) = do
+checkPopSize :: Universe u => (Int, Int) -> StateT u IO ()
+checkPopSize (minAgents, maxAgents) = do
   n <- popSize
   writeToLog $ "Pop. size=" ++ show n
-  if n < minAgents
-    then do
-      writeToLog "Requesting shutdown (population too small)"
-      return False
-    else
-      if n > maxAgents
-        then do
-          writeToLog "Requesting shutdown (population too big)"
-          return False
-        else return True
+  when (n < minAgents) $ requestShutdown "population too small"
+  when (n > maxAgents) $ requestShutdown "population too big"
+
+requestShutdown :: Universe u => String -> StateT u IO ()
+requestShutdown s = do
+  writeToLog $ "Requesting shutdown: " ++ s
+  lift D.requestShutdown
 
 atStartOfRound :: Universe u => StateT u IO () -> StateT u IO ()
 atStartOfRound program = do

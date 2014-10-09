@@ -1,5 +1,5 @@
 Name:              creatur
-Version:           5.6.6
+Version:           5.6.8
 Stability:         experimental
 Synopsis:          Framework for artificial life experiments.
 Description:       A software framework for automating experiments
@@ -21,10 +21,10 @@ Description:       A software framework for automating experiments
 Category:          AI
 License:           BSD3
 License-file:      LICENSE
-Copyright:         (c) Amy de Buitl&eacute;ir 2010-2014
+Copyright:         (c) Amy de Buitléir 2010-2014
 Homepage:          https://github.com/mhwombat/creatur
 Bug-reports:       https://github.com/mhwombat/creatur/issues
-Author:            Amy de Buitl&eacute;ir
+Author:            Amy de Buitléir
 Maintainer:        amy@nualeargais.ie
 Build-Type:        Simple
 Cabal-Version:     >=1.8
@@ -36,7 +36,7 @@ source-repository head
 source-repository this
   type:     git
   location: https://github.com/mhwombat/creatur.git
-  tag:      5.6.6
+  tag:      5.6.8
 
 library
   GHC-Options:      -Wall -fno-warn-orphans
