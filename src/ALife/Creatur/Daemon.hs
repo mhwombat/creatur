@@ -15,6 +15,7 @@
 
 module ALife.Creatur.Daemon
   (
+    TaskConfig(..),
     Daemon(..),
     launch,
     requestShutdown
@@ -35,54 +36,64 @@ import System.Posix.User (getLoginName, getRealUserID)
 termReceived :: MVar Bool
 termReceived = unsafePerformIO (newMVar False)
 
--- | Daemon configuration.
---   If @username@ is null, the daemon will run under the login name.
-data Daemon s = Daemon
+-- | Task configuration.
+data TaskConfig s = TaskConfig
   {
+    -- | Operations to perform on startup.
     onStartup :: s -> IO s,
+    -- | Operations to perform on shutdown.
     onShutdown :: s -> IO (),
+    -- | Operations to perform if an exception occurs.
     onException :: s -> SomeException -> IO s,
-    -- | The agent task.
-    task :: StateT s IO (),
-    username :: String,
-    -- | Number of microseconds to sleep between agent tasks.
+    -- | Operations to perform repeatedly while running.
+    run :: StateT s IO (),
+    -- | Number of microseconds to sleep between invocations of @'run'@.
     sleepTime :: Int
   }
 
--- | @'launch' daemon state@ creates a daemon running under the current
---   user's real userID, which invokes @task@.
-launch :: Daemon s -> s -> IO ()
+data Daemon p s = Daemon
+  {
+    daemon :: CreateDaemon p,
+    task :: TaskConfig s
+  }
+
+-- | @'launch' daemon state@ creates a daemon, which invokes @task@.
+--   *Note:* If @'user'@ (in @'daemon'@) is @Just ""@, the daemon will
+--   run under the login name. If @'user'@ is Nothing, the daemon will
+--   run under the name of the executable file containing the daemon. 
+launch :: Daemon p s -> s -> IO ()
 launch d s = do
   uid <- getRealUserID
   if uid /= 0
     then putStrLn "Must run as root"
     else do
-      u <- daemonUsername d
+      u <- defaultToLoginName (user . daemon $ d)
       serviced $ simpleDaemon 
         { program = daemonMain d s,
-          user    = Just u }
+          user    = u }
 
-daemonUsername :: Daemon s -> IO String
-daemonUsername d =
-  if (null . username) d
-    then getLoginName
-    else (return . username) d
-    
-daemonMain :: Daemon s -> s -> () -> IO ()
+defaultToLoginName :: Maybe String -> IO (Maybe String)
+defaultToLoginName (Just "") = fmap Just getLoginName
+defaultToLoginName x = return x
+
+daemonMain :: Daemon p s -> s -> () -> IO ()
 daemonMain d s _ = do
-  s' <- onStartup d s
-  _ <- installHandler sigTERM (Catch requestShutdown) (Just fullSignalSet)
+  s' <- handle ((onException . task $ d) s) ((onStartup . task $ d) s)
+  _ <- installHandler sigTERM (Catch requestShutdown)
+        (Just fullSignalSet)
   _ <- wrap (daemonMainLoop d s')
   return ()
 
-daemonMainLoop :: Daemon s -> s -> IO ()
+daemonMainLoop :: Daemon p s -> s -> IO ()
 daemonMainLoop d s = do
+  let st = sleepTime . task $ d
   stopRequested <- readMVar termReceived
   when (not stopRequested) $ do
-    s' <- handle (onException d s) $ execStateT (task d) s
-    when (sleepTime d > 0) $ threadDelay $ sleepTime d
+    s' <- handle ((onException . task $ d) s) $
+           execStateT (run . task $ d) s
+    when (st > 0) $ threadDelay st
     daemonMainLoop d s'
-  onShutdown d s
+  (onShutdown . task $ d) s
 
 wrap :: IO () -> IO ()
 wrap t = catch t

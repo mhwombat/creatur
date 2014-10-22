@@ -24,15 +24,14 @@ module ALife.Creatur.Task
     withAgents,
     runNoninteractingAgents,
     runInteractingAgents,
-    simpleDaemon,
+    simpleTaskConfig,
     startupHandler,
     shutdownHandler,
-    exceptionHandler,
-    -- nothing,
-    requestShutdown
+    exceptionHandler
+    -- requestShutdown
  ) where
 
-import ALife.Creatur.Daemon (Daemon(..))
+import ALife.Creatur.Daemon (TaskConfig(..))
 import qualified ALife.Creatur.Daemon as D
 import ALife.Creatur.Universe (Universe, Agent, AgentProgram,
   AgentsProgram, writeToLog, lineup, refreshLineup, markDone, endOfRound,
@@ -44,14 +43,13 @@ import Control.Monad.State (StateT, execStateT, evalStateT)
 import Control.Monad.Trans.Class (lift)
 import Data.Serialize (Serialize)
 
-simpleDaemon :: Universe u => Daemon u
-simpleDaemon = Daemon
+simpleTaskConfig :: Universe u => TaskConfig u
+simpleTaskConfig = TaskConfig
   {
     onStartup = startupHandler,
     onShutdown = shutdownHandler,
     onException = exceptionHandler,
-    task = undefined,
-    username = "",
+    run = undefined,
     sleepTime = 100
   }
 
