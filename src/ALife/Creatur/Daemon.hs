@@ -15,8 +15,9 @@
 
 module ALife.Creatur.Daemon
   (
-    TaskConfig(..),
-    Daemon(..),
+    Job(..),
+    CreaturDaemon(..),
+    simpleDaemon,
     launch,
     requestShutdown
   ) where
@@ -28,7 +29,7 @@ import Control.Monad (when)
 import Control.Monad.State (StateT, execStateT)
 import System.IO (hPutStr, stderr)
 import System.IO.Unsafe (unsafePerformIO)
-import System.Posix.Daemonize (CreateDaemon(..), serviced, simpleDaemon)
+import qualified System.Posix.Daemonize as D
 import System.Posix.Signals (Handler(Catch), fullSignalSet, 
   installHandler, sigTERM)
 import System.Posix.User (getLoginName, getRealUserID)
@@ -36,8 +37,8 @@ import System.Posix.User (getLoginName, getRealUserID)
 termReceived :: MVar Bool
 termReceived = unsafePerformIO (newMVar False)
 
--- | Task configuration.
-data TaskConfig s = TaskConfig
+-- | The work to be performed by a daemon.
+data Job s = Job
   {
     -- | Operations to perform on startup.
     onStartup :: s -> IO s,
@@ -46,54 +47,57 @@ data TaskConfig s = TaskConfig
     -- | Operations to perform if an exception occurs.
     onException :: s -> SomeException -> IO s,
     -- | Operations to perform repeatedly while running.
-    run :: StateT s IO (),
-    -- | Number of microseconds to sleep between invocations of @'run'@.
+    task :: StateT s IO (),
+    -- | Number of microseconds to sleep between invocations of @'task'@.
     sleepTime :: Int
   }
 
-data Daemon p s = Daemon
+data CreaturDaemon p s = CreaturDaemon
   {
-    daemon :: CreateDaemon p,
-    task :: TaskConfig s
+    daemon :: D.CreateDaemon p,
+    job :: Job s
   }
 
--- | @'launch' daemon state@ creates a daemon, which invokes @task@.
+-- | Creates a simple daemon to run a job. The daemon will run under
+--   the login name.
+simpleDaemon :: Job s -> s -> D.CreateDaemon ()
+simpleDaemon j s = D.simpleDaemon { D.program = daemonMain j s,
+                                    D.user    = Just "" }
+
+-- | @'launch' daemon state@ creates a daemon, which invokes @daemon@.
 --   *Note:* If @'user'@ (in @'daemon'@) is @Just ""@, the daemon will
 --   run under the login name. If @'user'@ is Nothing, the daemon will
 --   run under the name of the executable file containing the daemon. 
-launch :: Daemon p s -> s -> IO ()
-launch d s = do
+launch :: CreaturDaemon p s -> IO ()
+launch d = do
   uid <- getRealUserID
   if uid /= 0
     then putStrLn "Must run as root"
     else do
-      u <- defaultToLoginName (user . daemon $ d)
-      serviced $ simpleDaemon 
-        { program = daemonMain d s,
-          user    = u }
+      u <- defaultToLoginName (D.user . daemon $ d)
+      D.serviced $ (daemon d) { D.user = u }
 
 defaultToLoginName :: Maybe String -> IO (Maybe String)
 defaultToLoginName (Just "") = fmap Just getLoginName
 defaultToLoginName x = return x
 
-daemonMain :: Daemon p s -> s -> () -> IO ()
-daemonMain d s _ = do
-  s' <- handle ((onException . task $ d) s) ((onStartup . task $ d) s)
+daemonMain :: Job s -> s -> () -> IO ()
+daemonMain t s _ = do
+  s' <- handle (onException t s) (onStartup t s)
   _ <- installHandler sigTERM (Catch requestShutdown)
         (Just fullSignalSet)
-  _ <- wrap (daemonMainLoop d s')
+  _ <- wrap (daemonMainLoop t s')
   return ()
 
-daemonMainLoop :: Daemon p s -> s -> IO ()
-daemonMainLoop d s = do
-  let st = sleepTime . task $ d
+daemonMainLoop :: Job s -> s -> IO ()
+daemonMainLoop t s = do
+  let st = sleepTime t
   stopRequested <- readMVar termReceived
   when (not stopRequested) $ do
-    s' <- handle ((onException . task $ d) s) $
-           execStateT (run . task $ d) s
+    s' <- handle (onException t s) $ execStateT (task t) s
     when (st > 0) $ threadDelay st
-    daemonMainLoop d s'
-  (onShutdown . task $ d) s
+    daemonMainLoop t s'
+  onShutdown t s
 
 wrap :: IO () -> IO ()
 wrap t = catch t
