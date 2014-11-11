@@ -15,7 +15,9 @@ module ALife.Creatur.Persistent
     Persistent,
     mkPersistent,
     getPS,
-    putPS
+    putPS,
+    modifyPS,
+    runPS
   ) where
 
 import ALife.Creatur.Util (modifyLift)
@@ -47,6 +49,16 @@ putPS s = do
   modify (\p -> p { psValue=s })
   p' <- get
   liftIO $ store p'
+
+modifyPS :: (Show a, Read a) => (a -> a) -> StateT (Persistent a) IO ()
+modifyPS f = do
+  p <- getPS
+  putPS $ f p
+
+runPS :: Read a => (a -> b) -> StateT (Persistent a) IO b
+runPS f = do
+  p <- getPS
+  return $ f p
 
 store :: Show a => Persistent a -> IO ()
 store p = do
