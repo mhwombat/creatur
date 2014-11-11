@@ -32,7 +32,7 @@ data Persistent a = Persistent {
     psValue :: a,
     psDefaultValue :: a,
     psFilename :: FilePath
-  } deriving (Show, Eq)
+  } deriving (Show, Read, Eq)
 
 -- | Creates a counter that will store its value in the specified file.
 mkPersistent :: a -> FilePath -> Persistent a
