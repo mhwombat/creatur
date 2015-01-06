@@ -46,9 +46,7 @@ module ALife.Creatur.Universe
     startOfRound,
     endOfRound,
     refreshLineup,
-    markDone,
-    replenishEnergyPool,
-    withdrawEnergy
+    markDone
  ) where
 
 import Prelude hiding (lookup)
@@ -63,7 +61,6 @@ import qualified ALife.Creatur.Database.FileSystem as FS
 import qualified ALife.Creatur.Database.CachedFileSystem as CFS
 import qualified ALife.Creatur.Logger as L
 import qualified ALife.Creatur.Logger.SimpleLogger as SL
-import qualified ALife.Creatur.EnergyPool as E
 import ALife.Creatur.Util (stateMap, shuffle)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Random (evalRandIO)
@@ -73,9 +70,8 @@ import Data.Serialize (Serialize)
 
 -- | A habitat containing artificial life.
 class (C.Clock (Clock u), L.Logger (Logger u), D.Database (AgentDB u),
-  N.Namer (Namer u), CL.Checklist (Checklist u),
-  E.EnergyPool (EnergyPool u), A.Agent (Agent u), D.Record (Agent u),
-  Agent u ~ D.DBRecord (AgentDB u))
+  N.Namer (Namer u), CL.Checklist (Checklist u), A.Agent (Agent u),
+  D.Record (Agent u), Agent u ~ D.DBRecord (AgentDB u))
       => Universe u where
   type Agent u
   type Clock u
@@ -93,9 +89,6 @@ class (C.Clock (Clock u), L.Logger (Logger u), D.Database (AgentDB u),
   type Checklist u
   checklist :: u -> Checklist u
   setChecklist :: u -> Checklist u -> u
-  type EnergyPool u
-  energyPool :: u -> EnergyPool u
-  setEnergyPool :: u -> EnergyPool u -> u
 
 withClock :: (Universe u, Monad m) => StateT (Clock u) m a -> StateT u m a
 withClock program = do
@@ -129,13 +122,6 @@ withChecklist
 withChecklist program = do
   u <- get
   stateMap (setChecklist u) checklist program
-
-withEnergyPool
-  :: (Universe u, Monad m)
-    => StateT (EnergyPool u) m a -> StateT u m a
-withEnergyPool program = do
-  u <- get
-  stateMap (setEnergyPool u) energyPool program
 
 -- | The current "time" (counter) in this universe
 currentTime :: Universe u => StateT u IO A.Time
@@ -174,7 +160,14 @@ popSize = withAgentDB D.numRecords
 getAgent
   :: (Universe u, Serialize (Agent u))
     => A.AgentId -> StateT u IO (Either String (Agent u))
-getAgent name = withAgentDB (D.lookup name)
+getAgent name = do
+  result <- withAgentDB (D.lookup name)
+  case result of
+    Left msg -> do
+      writeToLog $ "Unable to read " ++ name ++ ": " ++ msg
+      archive name
+    Right _  -> return ()
+  return result
 
 -- | Fetches the agent with the specified ID from the archive.
 getAgentFromArchive
@@ -185,13 +178,12 @@ getAgentFromArchive name = withAgentDB (D.lookupInArchive name)
 -- | Fetches the agents with the specified IDs from the population.
 getAgents
   :: (Universe u, Serialize (Agent u))
-    => [A.AgentId] -> StateT u IO (Either String [Agent u])
+    => [A.AgentId] -> StateT u IO [Agent u]
 getAgents names = do
   selected <- mapM getAgent names
   let (msgs, agents) = partitionEithers selected
-  if null msgs
-    then return $ Right agents
-    else return . Left $ show msgs
+  mapM_ writeToLog msgs
+  return agents
 
 -- | If the agent is alive, adds it to the population (replacing the
 --   the previous copy of that agent, if any). If the agent is dead,
@@ -207,10 +199,15 @@ store a = do
       if newAgent
          then writeToLog $ A.agentId a ++ " added to population"
          else writeToLog $ A.agentId a ++ " returned to population"
-    else do
-      withAgentDB (D.delete $ A.agentId a)
-      withChecklist $ CL.delete (A.agentId a)
-      writeToLog $ (A.agentId a) ++ " archived and removed from lineup"
+    else archive (A.agentId a)
+
+archive
+  :: (Universe u, Serialize (Agent u))
+    => A.AgentId -> StateT u IO ()
+archive name = do
+  withAgentDB $ D.delete name
+  withChecklist $ CL.delete name
+  writeToLog $ name ++ " archived and removed from lineup"
 
 isNew :: Universe u => A.AgentId -> StateT u IO Bool
 isNew name = fmap (name `notElem`) agentIds
@@ -248,13 +245,7 @@ type AgentsProgram u = [Agent u] -> StateT u IO [Agent u]
 withAgents
   :: (Universe u, Serialize (Agent u))
     => AgentsProgram u -> [A.AgentId] -> StateT u IO ()
-withAgents program names = do
-  result <- getAgents names
-  case result of
-    Left msg ->
-      writeToLog $ "Unable to read '" ++ show names ++ "': " ++ msg
-    Right as ->
-      program as >>= mapM_ store
+withAgents program names = getAgents names >>= program >>= mapM_ store
 
 -- | Returns the current lineup of (living) agents in the universe.
 --   Note: Check for @'endOfRound'@ and call @'refreshLineup'@ if needed
@@ -290,30 +281,13 @@ shuffledAgentIds :: Universe u => StateT u IO [String]
 shuffledAgentIds
   = agentIds >>= liftIO . evalRandIO . shuffle
 
--- | Replenish the energy pool
-replenishEnergyPool :: Universe u => Double -> StateT u IO ()
-replenishEnergyPool e = do
-  withEnergyPool (E.replenish e)
-  y <- withEnergyPool E.available
-  writeToLog $ "Replenished energy pool, " ++ show y ++ " available"
-
--- | Withdraw energy from the pool
-withdrawEnergy :: Universe u => Double -> StateT u IO Double
-withdrawEnergy e = do
-  x <- withEnergyPool (E.withdraw e)
-  y <- withEnergyPool E.available
-  writeToLog $ "Withdrew " ++ show x ++ " from energy pool, "
-    ++ show y ++ " available"
-  return x
-
 data SimpleUniverse a = SimpleUniverse
   {
     suClock :: K.PersistentCounter,
     suLogger :: SL.SimpleLogger,
     suDB :: FS.FSDatabase a,
     suNamer :: N.SimpleNamer,
-    suChecklist :: CL.PersistentChecklist,
-    suEnergyPool :: E.PersistentEnergyPool
+    suChecklist :: CL.PersistentChecklist
   } deriving (Show, Eq)
 
 instance (A.Agent a, D.Record a) => Universe (SimpleUniverse a) where
@@ -333,19 +307,15 @@ instance (A.Agent a, D.Record a) => Universe (SimpleUniverse a) where
   type Checklist (SimpleUniverse a) = CL.PersistentChecklist
   checklist = suChecklist
   setChecklist u cl = u { suChecklist=cl }
-  type EnergyPool (SimpleUniverse a) = E.PersistentEnergyPool
-  energyPool = suEnergyPool
-  setEnergyPool u cl = u { suEnergyPool=cl }
 
 mkSimpleUniverse :: String -> FilePath -> SimpleUniverse a
 mkSimpleUniverse name dir
-  = SimpleUniverse c l d n cl e
+  = SimpleUniverse c l d n cl
   where c = K.mkPersistentCounter (dir ++ "/clock")
         l = SL.mkSimpleLogger (dir ++ "/log/" ++ name ++ ".log")
         d = FS.mkFSDatabase (dir ++ "/db")
         n = N.mkSimpleNamer (name ++ "_") (dir ++ "/namer")
         cl = CL.mkPersistentChecklist (dir ++ "/todo")
-        e = E.mkPersistentEnergyPool (dir ++ "/energy")
 
 data CachedUniverse a = CachedUniverse
   {
@@ -353,8 +323,7 @@ data CachedUniverse a = CachedUniverse
     cuLogger :: SL.SimpleLogger,
     cuDB :: CFS.CachedFSDatabase a,
     cuNamer :: N.SimpleNamer,
-    cuChecklist :: CL.PersistentChecklist,
-    cuEnergyPool :: E.PersistentEnergyPool
+    cuChecklist :: CL.PersistentChecklist
   } deriving (Show, Eq)
 
 instance (A.Agent a, D.SizedRecord a) => Universe (CachedUniverse a) where
@@ -374,16 +343,12 @@ instance (A.Agent a, D.SizedRecord a) => Universe (CachedUniverse a) where
   type Checklist (CachedUniverse a) = CL.PersistentChecklist
   checklist = cuChecklist
   setChecklist u cl = u { cuChecklist=cl }
-  type EnergyPool (CachedUniverse a) = E.PersistentEnergyPool
-  energyPool = cuEnergyPool
-  setEnergyPool u cl = u { cuEnergyPool=cl }
 
 mkCachedUniverse :: String -> FilePath -> Int -> CachedUniverse a
 mkCachedUniverse name dir cacheSize
-  = CachedUniverse c l d n cl e
+  = CachedUniverse c l d n cl
   where c = K.mkPersistentCounter (dir ++ "/clock")
         l = SL.mkSimpleLogger (dir ++ "/log/" ++ name ++ ".log")
         d = CFS.mkCachedFSDatabase (dir ++ "/db") cacheSize
         n = N.mkSimpleNamer (name ++ "_") (dir ++ "/namer")
         cl = CL.mkPersistentChecklist (dir ++ "/todo")
-        e = E.mkPersistentEnergyPool (dir ++ "/energy")

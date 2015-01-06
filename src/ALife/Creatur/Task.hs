@@ -27,7 +27,9 @@ module ALife.Creatur.Task
     simpleJob,
     startupHandler,
     shutdownHandler,
+    doNothing,
     exceptionHandler,
+    checkPopSize,
     requestShutdown
  ) where
 
@@ -62,11 +64,16 @@ shutdownHandler u = evalStateT (writeToLog "Shutdown requested") u
 exceptionHandler :: Universe u => u -> SomeException -> IO u
 exceptionHandler u x = execStateT (writeToLog ("WARNING: " ++ show x)) u
 
+-- | Can be used as a startupHandler, shutdownHandler,
+--   startRoundProgram, or endRoundProgram
+doNothing :: Monad m => m ()
+doNothing = return ()
+
 runNoninteractingAgents
   :: (Universe u, Serialize (Agent u))
-    => AgentProgram u -> (Int, Int) -> StateT u IO () -> StateT u IO ()
+    => AgentProgram u -> StateT u IO () -> StateT u IO ()
       -> StateT u IO ()
-runNoninteractingAgents agentProgram popRange startRoundProgram
+runNoninteractingAgents agentProgram startRoundProgram
     endRoundProgram = do
   atStartOfRound startRoundProgram
   as <- lineup
@@ -76,7 +83,6 @@ runNoninteractingAgents agentProgram popRange startRoundProgram
     -- do that first in case the next line triggers an exception
     withAgent agentProgram a
     atEndOfRound endRoundProgram
-    checkPopSize popRange
 
 --   The input parameter is a list of agents. The first agent in the
 --   list is the agent whose turn it is to use the CPU. The rest of
@@ -89,9 +95,9 @@ runNoninteractingAgents agentProgram popRange startRoundProgram
 
 runInteractingAgents
   :: (Universe u, Serialize (Agent u))
-    => AgentsProgram u -> (Int, Int) -> StateT u IO () -> StateT u IO ()
+    => AgentsProgram u -> StateT u IO () -> StateT u IO ()
       -> StateT u IO ()
-runInteractingAgents agentsProgram popRange startRoundProgram
+runInteractingAgents agentsProgram startRoundProgram
     endRoundProgram = do
   atStartOfRound startRoundProgram
   as <- lineup
@@ -99,7 +105,6 @@ runInteractingAgents agentsProgram popRange startRoundProgram
   -- do that first in case the next line triggers an exception
   withAgents agentsProgram as
   atEndOfRound endRoundProgram
-  checkPopSize popRange
 
 checkPopSize :: Universe u => (Int, Int) -> StateT u IO ()
 checkPopSize (minAgents, maxAgents) = do
