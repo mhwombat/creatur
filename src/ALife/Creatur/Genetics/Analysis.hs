@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------
 -- |
 -- Module      :  ALife.Creatur.Genetics.Analysis
--- Copyright   :  (c) Amy de Buitléir 2013-2014
+-- Copyright   :  (c) Amy de Buitléir 2013-2015
 -- License     :  BSD-style
 -- Maintainer  :  amy@nualeargais.ie
 -- Stability   :  experimental
