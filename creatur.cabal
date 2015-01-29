@@ -1,5 +1,5 @@
 Name:              creatur
-Version:           5.9.1
+Version:           5.9.2
 Stability:         experimental
 Synopsis:          Framework for artificial life experiments.
 Description:       A software framework for automating experiments
@@ -36,7 +36,7 @@ source-repository head
 source-repository this
   type:     git
   location: https://github.com/mhwombat/creatur.git
-  tag:      5.9.1
+  tag:      5.9.2
 
 library
   GHC-Options:      -Wall -fno-warn-orphans
@@ -110,16 +110,21 @@ Test-suite creatur-tests
                     test-framework-hunit ==0.3.*,
                     test-framework-quickcheck2 ==0.3.*,
                     QuickCheck ==2.7.*
-  Other-modules:    ALife.Creatur.UtilQC
+  Other-modules:    ALife.Creatur.ChecklistQC
                     ALife.Creatur.CounterQC
                     ALife.Creatur.Database.CachedFileSystemQC
                     ALife.Creatur.Database.FileSystemQC
-                    ALife.Creatur.Genetics.DiploidQC,
+                    ALife.Creatur.Genetics.BRGCBoolBench
                     ALife.Creatur.Genetics.BRGCBoolQC
-                    ALife.Creatur.Genetics.BRGCWord8QC
                     ALife.Creatur.Genetics.BRGCWord16QC
+                    ALife.Creatur.Genetics.BRGCWord8Bench
+                    ALife.Creatur.Genetics.BRGCWord8QC
+                    ALife.Creatur.Genetics.DiploidQC,
                     ALife.Creatur.Genetics.RecombinationQC
                     ALife.Creatur.PersistentQC
+                    ALife.Creatur.UniverseQC
+                    ALife.Creatur.UtilQC
+                    
 
 -- Benchmark creatur-bench
 --   Type:             exitcode-stdio-1.0
