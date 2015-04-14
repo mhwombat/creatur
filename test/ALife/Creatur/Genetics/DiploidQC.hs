@@ -18,7 +18,6 @@ module ALife.Creatur.Genetics.DiploidQC
   ) where
 
 import ALife.Creatur.Genetics.Diploid
-import Control.Applicative ((<$>), (<*>))
 import GHC.Generics (Generic)
 import Test.Framework as TF (Test, testGroup)
 import Test.Framework.Providers.QuickCheck2 (testProperty)

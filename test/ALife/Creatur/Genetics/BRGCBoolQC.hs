@@ -19,7 +19,6 @@ module ALife.Creatur.Genetics.BRGCBoolQC
 import Prelude hiding (read)
 import ALife.Creatur.Genetics.BRGCBool
 import ALife.Creatur.Genetics.Analysis (Analysable)
-import Control.Applicative ((<$>), (<*>))
 import Data.Word (Word8, Word16)
 import GHC.Generics (Generic)
 import Test.Framework as TF (Test, testGroup)

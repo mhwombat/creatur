@@ -20,8 +20,7 @@ module ALife.Creatur.Logger
   ) where
 
 import Control.Monad.State (StateT)
-import Data.Time (formatTime, getZonedTime)
-import System.Locale (defaultTimeLocale)
+import Data.Time (formatTime, getZonedTime, defaultTimeLocale)
 
 class Logger l where
   -- | @'writeToLog' msg@ formats and writes a new log message.

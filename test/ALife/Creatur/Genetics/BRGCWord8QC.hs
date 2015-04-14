@@ -20,7 +20,6 @@ import Prelude hiding (read)
 import ALife.Creatur.Genetics.BRGCWord8
 import ALife.Creatur.Genetics.Analysis (Analysable)
 import ALife.Creatur.Util (fromEither)
-import Control.Applicative ((<$>), (<*>))
 import Data.Word (Word8, Word16)
 import GHC.Generics (Generic)
 import Test.Framework as TF (Test, testGroup)
