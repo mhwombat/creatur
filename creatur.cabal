@@ -1,5 +1,5 @@
 Name:              creatur
-Version:           5.9.3
+Version:           5.9.4
 Stability:         experimental
 Synopsis:          Framework for artificial life experiments.
 Description:       A software framework for automating experiments
@@ -36,7 +36,7 @@ source-repository head
 source-repository this
   type:     git
   location: https://github.com/mhwombat/creatur.git
-  tag:      5.9.3
+  tag:      5.9.4
 
 library
   GHC-Options:      -Wall -fno-warn-orphans
@@ -70,7 +70,7 @@ library
   Other-modules:    Paths_creatur
   Build-Depends:    
                     array ==0.5.*,
-                    base ==4.*,
+                    base >=4.8 && <5,
                     bytestring ==0.10.*,
                     cond ==0.4.*,
                     cereal ==0.4.*,
@@ -96,7 +96,7 @@ Test-suite creatur-tests
   Hs-source-dirs:   test
   Build-Depends:    
                     array ==0.5.*,
-                    base ==4.*,
+                    base >=4.8 && <5,
                     binary ==0.7.*,
                     cereal ==0.4.*,
                     creatur,
@@ -132,7 +132,7 @@ Test-suite creatur-tests
 --   GHC-Options:      -Wall
 --   Hs-source-dirs:   test
 --   Build-Depends:    
---                     base ==4.*,
+--                     base >=4.8 && <5,
 --                     creatur,
 --                     criterion ==0.8.*,
 --                     test-framework ==0.8.*
