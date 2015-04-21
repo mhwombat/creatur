@@ -19,8 +19,13 @@
 -- next are the result of mutation alone.
 --
 ------------------------------------------------------------------------
-{-# LANGUAGE TypeFamilies, FlexibleContexts, FlexibleInstances,
-    DefaultSignatures, DeriveGeneric, TypeOperators #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE DefaultSignatures #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE CPP #-}
 module ALife.Creatur.Genetics.BRGCWord16
   (
     Genetic(..),
@@ -57,6 +62,11 @@ import Data.Char (ord, chr)
 import Data.Functor.Identity (Identity)
 import Data.Word (Word8, Word16)
 import GHC.Generics
+
+#if MIN_VERSION_base(4,8,0)
+#else
+import Control.Applicative
+#endif
 
 type Sequence = [Word16]
 

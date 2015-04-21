@@ -10,7 +10,9 @@
 -- QuickCheck tests.
 --
 ------------------------------------------------------------------------
-{-# LANGUAGE DeriveGeneric, FlexibleInstances #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE CPP #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module ALife.Creatur.Genetics.DiploidQC
   (
@@ -23,6 +25,11 @@ import Test.Framework as TF (Test, testGroup)
 import Test.Framework.Providers.QuickCheck2 (testProperty)
 import Test.QuickCheck (Arbitrary, Gen, Property, arbitrary, choose,
   oneof, property, sized, vectorOf)
+
+#if MIN_VERSION_base(4,8,0)
+#else
+import Control.Applicative
+#endif
 
 data TestStructure = A | B Bool | C Int | D Bool Char | E [TestStructure]
   deriving (Show, Eq, Generic)

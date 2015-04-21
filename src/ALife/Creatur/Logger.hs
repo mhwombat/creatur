@@ -11,6 +11,7 @@
 -- framework.
 --
 ------------------------------------------------------------------------
+{-# LANGUAGE CPP #-}
 {-# OPTIONS_GHC -fno-warn-type-defaults #-}
 
 module ALife.Creatur.Logger
@@ -20,7 +21,13 @@ module ALife.Creatur.Logger
   ) where
 
 import Control.Monad.State (StateT)
+
+#if MIN_VERSION_base(4,8,0)
 import Data.Time (formatTime, getZonedTime, defaultTimeLocale)
+#else
+import Data.Time (formatTime, getZonedTime)
+import System.Locale (defaultTimeLocale)
+#endif
 
 class Logger l where
   -- | @'writeToLog' msg@ formats and writes a new log message.
