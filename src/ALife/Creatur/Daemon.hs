@@ -19,6 +19,7 @@ module ALife.Creatur.Daemon
     CreaturDaemon(..),
     simpleDaemon,
     launch,
+    launchInteractive,
     requestShutdown
   ) where
 
@@ -32,6 +33,7 @@ import System.IO.Unsafe (unsafePerformIO)
 import qualified System.Posix.Daemonize as D
 import System.Posix.Signals (Handler(Catch), fullSignalSet, 
   installHandler, sigTERM)
+import System.Posix.Syslog (Priority(Warning), syslog)
 import System.Posix.User (getLoginName, getRealUserID)
 
 termReceived :: MVar Bool
@@ -77,6 +79,12 @@ launch d = do
       u <- defaultToLoginName (D.user . daemon $ d)
       D.serviced $ (daemon d) { D.user = u }
 
+launchInteractive :: Job s -> s -> IO ()
+launchInteractive j s = do
+  s' <- onStartup j s
+  daemonMain j s' ()
+  return ()
+
 defaultToLoginName :: Maybe String -> IO (Maybe String)
 defaultToLoginName (Just "") = fmap Just getLoginName
 defaultToLoginName x = return x
@@ -103,6 +111,7 @@ wrap :: IO () -> IO ()
 wrap t = catch t
   (\e -> do
      let err = show (e :: SomeException)
+     syslog Warning ("Unhandled exception: " ++ err)
      hPutStr stderr ("Unhandled exception: " ++ err)
      return ())
 

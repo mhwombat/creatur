@@ -1,5 +1,5 @@
 Name:              creatur
-Version:           5.9.5
+Version:           5.9.6
 Stability:         experimental
 Synopsis:          Framework for artificial life experiments.
 Description:       A software framework for automating experiments
@@ -36,7 +36,7 @@ source-repository head
 source-repository this
   type:     git
   location: https://github.com/mhwombat/creatur.git
-  tag:      5.9.5
+  tag:      5.9.6
 
 library
   GHC-Options:      -Wall -fno-warn-orphans
@@ -78,16 +78,17 @@ library
                     filepath ==1.4.*,
                     gray-extended ==1.*,
                     hdaemonize ==0.5.*,
-                    MonadRandom ==0.3.*,
+                    hsyslog ==2.0,
+                    MonadRandom ==0.4.*,
                     mtl ==2.2.*,
                     old-locale ==1.0.*,
                     process ==1.2.*,
                     random ==1.1.*,
                     split ==0.2.*,
-                    time ==1.4.* || ==1.5.*,
+                    time ==1.5.*,
                     transformers ==0.4.*,
                     unix ==2.7.*,
-                    zlib ==0.5.*
+                    zlib ==0.6.*
 
 Test-suite creatur-tests
   Type:             exitcode-stdio-1.0
@@ -102,14 +103,15 @@ Test-suite creatur-tests
                     creatur,
                     directory ==1.2.*,
                     filepath ==1.4.*,
+                    hsyslog ==2.0,
                     HUnit ==1.2.*,
-                    MonadRandom ==0.3.*,
+                    MonadRandom ==0.4.*,
                     mtl ==2.2.*,
                     temporary ==1.2.*,
                     test-framework ==0.8.*,
                     test-framework-hunit ==0.3.*,
                     test-framework-quickcheck2 ==0.3.*,
-                    QuickCheck ==2.7.* || ==2.8.*
+                    QuickCheck ==2.8.*
   Other-modules:    ALife.Creatur.ChecklistQC
                     ALife.Creatur.CounterQC
                     ALife.Creatur.Database.CachedFileSystemQC
