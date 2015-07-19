@@ -118,6 +118,13 @@ class Genetic g where
   getWithDefault :: g -> Reader g
   getWithDefault d = fmap (fromEither d) get
 
+  getWithName :: String -> Reader (Either [String] g)
+  getWithName s = do
+    g0 <- get
+    return $ case g0 of
+               (Left xs) -> Left ((s ++ ":"):xs)
+               (Right g1) -> Right g1
+
 class GGenetic f where
   gput :: f a -> Writer ()
   gget :: Reader (Either [String] (f a))
