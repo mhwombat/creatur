@@ -41,9 +41,9 @@ prop_round_trippable g = property $ g' == Right g
 
 prop_rawWord8s_round_trippable :: [Word8] -> Property
 prop_rawWord8s_round_trippable g = property $ g' == g
-  where x = runWriter (putRawWord8s g)
+  where x = fst $ runWriter (putRawWord8s g)
         g' = fromEither (error "read returned Nothing") .
-               runReader (getRawWord8s n) $ x
+               fst . runReader (getRawWord8s n) $ x
         n = length g
 
 data TestStructure = A | B Bool | C Word8 | D Word16 Char | E [TestStructure]

@@ -24,6 +24,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE DefaultSignatures #-}
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE CPP #-}
 module ALife.Creatur.Genetics.BRGCWord8
@@ -46,6 +47,8 @@ module ALife.Creatur.Genetics.BRGCWord8
     getAndExpressWithDefault,
     copy2,
     consumed2,
+    putAndReport,
+    getAndReport,
     putRawWord8,
     getRawWord8,
     putRawWord8s,
@@ -56,6 +59,7 @@ import Prelude hiding (read)
 import ALife.Creatur.Genetics.Diploid (Diploid, express)
 import ALife.Creatur.Util (fromEither)
 import Codec.Gray (integralToGray, grayToIntegral)
+import Control.Monad (replicateM)
 import Control.Monad.State.Lazy (StateT, runState, execState, evalState)
 import qualified Control.Monad.State.Lazy as S (put, get, gets)
 import Data.Char (ord, chr)
@@ -71,30 +75,33 @@ import Control.Applicative
 
 type Sequence = [Word8]
 
-type Writer = StateT Sequence Identity
+type Writer = StateT (Sequence, [String]) Identity
 
 write :: Genetic x => x -> Sequence
-write x = runWriter (put x)
+write x = fst $ runWriter (put x)
 
-runWriter :: Writer () -> Sequence
-runWriter w = execState (w >> finalise) []
+runWriter :: Writer () -> (Sequence, [String])
+runWriter w = execState (w >> finalise) ([], [])
 
-type Reader = StateT (Sequence, Int) Identity
+type Reader = StateT (Sequence, Int, [String]) Identity
 
 read :: Genetic g => Sequence -> Either [String] g
-read s = evalState get (s, 0)
+read s = fst $ runReader get s
 
-runReader :: Reader g -> Sequence -> g
-runReader r s = evalState r (s, 0)
+runReader
+  :: Reader (Either [String] g) -> Sequence
+    -> (Either [String] g, [String])
+runReader r s = (x, reverse msgs)
+  where (x, (_, _, msgs)) = runState r (s, 0, [])
 
 -- | Return the entire genome.
 copy :: Reader Sequence
-copy = S.gets fst
+copy = S.gets (\(x, _, _) -> x)
 
 -- | Return the portion of the genome that has been read.
 consumed :: Reader Sequence
 consumed = do
-  (xs, i) <- S.get
+  (xs, i, _) <- S.get
   return $ take i xs
 
 -- | A class representing anything which is represented in, and
@@ -121,13 +128,6 @@ class Genetic g where
   getWithDefault :: g -> Reader g
   getWithDefault d = fmap (fromEither d) get
 
-  getWithName :: String -> Reader (Either [String] g)
-  getWithName s = do
-    g0 <- get
-    return $ case g0 of
-               (Left xs) -> Left ((s ++ ":"):xs)
-               (Right g1) -> Right g1
-
 class GGenetic f where
   gput :: f a -> Writer ()
   gget :: Reader (Either [String] (f a))
@@ -147,17 +147,23 @@ instance (GGenetic a, GGenetic b) => GGenetic (a :*: b) where
 
 -- | Meta-information (constructor names, etc.)
 instance (GGenetic a, GGenetic b) => GGenetic (a :+: b) where
-  gput (L1 x) = putRawWord8 0 >> gput x
-  gput (R1 x) = putRawWord8 1 >> gput x
+  gput (L1 x) = putAndReport [0] "L1" >> gput x
+  gput (R1 x) = putAndReport [1] "R1" >> gput x
   gget = do
-    a <- getRawWord8
+    a <- getAndReport 1 convertLR
     case a of
-      Right x -> do
-        if even x -- Only care about the last bit
-          then fmap (fmap L1) gget
-          else fmap (fmap R1) gget
-      Left s -> return $ Left s
+      Right L -> fmap (fmap L1) gget
+      Right R -> fmap (fmap R1) gget
+      Left s  -> return $ Left s
 
+data LR = L | R
+
+convertLR :: [Word8] -> Either String (LR, String)
+convertLR (x:[]) = if even x -- Only care about the last bit
+                     then Right (L, "L1")
+                     else Right (R, "R1")
+convertLR _ = Left "logic error"
+  
 -- | Sums: encode choice between constructors
 instance (GGenetic a) => GGenetic (M1 i c a) where
   gput (M1 x) = gput x
@@ -175,35 +181,48 @@ instance (Genetic a) => GGenetic (K1 i a) where
 --
 
 instance Genetic Bool where
-  put False = putRawWord8 0
-  put True  = putRawWord8 1
-  get = fmap (fmap word8ToBool) getRawWord8
+  put b = putAndReport [fromIntegral $ fromEnum b] (show b)
+  get = getAndReport 1 convert
+    where convert (x:[]) = Right (g, show g)
+            where g = word8ToBool x
+          convert _ = Left "logic error"
 
 word8ToBool :: Word8 -> Bool
 word8ToBool x = if even x then False else True
 
 instance Genetic Char where
-  put = putRawWord8 . fromIntegral . ord
-  get = fmap (fmap (chr . fromIntegral)) getRawWord8
+  put x = putAndReport [fromIntegral . ord $ x] (show x)
+  get = getAndReport 1 convert
+    where convert (x:[]) = Right (g, show g)
+            where g = (chr . fromIntegral) x
+          convert _ = Left "logic error"
 
 instance Genetic Word8 where
-  put = putRawWord8 . integralToGray
-  get = fmap (fmap grayToIntegral) getRawWord8
+  put x = putAndReport [integralToGray x] (show x ++ " Word8")
+  get = getAndReport 1 convert
+    where convert (x:[]) = Right (g, show g ++ " Word8")
+            where g = grayToIntegral x
+          convert _ = Left "logic error"
 
 instance Genetic Word16 where
-  put g = putRawWord8 high >> putRawWord8 low
+  put g = putAndReport
+            [fromIntegral $ x `div` 0x100, fromIntegral $ x `mod` 0x100]
+              (show g ++ " Word16")
     where x = integralToGray g
-          high = fromIntegral (x `div` 0x100)
-          low = fromIntegral (x `mod` 0x100)
-  get = do
-    h <- getRawWord8 :: Reader (Either [String] Word8)
-    let high = fmap (\x -> fromIntegral x * 0x100) h :: Either [String] Word16
-    l <- getRawWord8 :: Reader (Either [String] Word8)
-    let low = fmap fromIntegral l :: Either [String] Word16
-    return . fmap grayToIntegral $ (+) <$> high <*> low
+  get = getAndReport 2 grayWord16
+
+grayWord16 :: [Word8] -> Either String (Word16, String)
+grayWord16 (x:y:[]) = Right (g, show g ++ " Word16")
+  where g = grayToIntegral (high + low) :: Word16
+        high = fromIntegral x * 0x100
+        low = fromIntegral y
+grayWord16 _ = Left "logic error"
 
 instance (Genetic a) => Genetic [a] where
-  put xs = put n' >> mapM_ put xs
+  put xs = do
+    put n'
+    replaceReportW (show n' ++ " list length")
+    mapM_ put xs
     where n = length xs
           n' = if n <= fromIntegral (maxBound :: Word16)
                  then fromIntegral n
@@ -211,7 +230,8 @@ instance (Genetic a) => Genetic [a] where
   get = do
     n <- get :: Reader (Either [String] Word16)
     case n of
-      Right n' -> getList (fromIntegral n')
+      Right n' -> do replaceReportR (show n' ++ " list length")
+                     getList (fromIntegral n')
       Left s   -> return $ Left s
 
 instance (Genetic a) => Genetic (Maybe a)
@@ -227,10 +247,11 @@ instance (Genetic a, Genetic b) => Genetic (Either a b)
 
 finalise :: Writer ()
 finalise = do
-  xs <- S.get
-  S.put (reverse xs)
+  (xs, msgs) <- S.get
+  S.put (reverse xs, reverse msgs)
 
 getList :: Genetic a => Int -> Reader (Either [String] [a])
+getList 0 = return $ Right []
 getList n = do
   cs <- sequence $ replicate n get
   let (mss, xs) = partitionEithers cs
@@ -241,55 +262,78 @@ getList n = do
 -- | Write a Word8 value to the genome without encoding it
 putRawWord8 :: Word8 -> Writer ()
 putRawWord8 x = do
-  xs <- S.get
-  S.put (x:xs)
+  (xs, msgs) <- S.get
+  S.put (x:xs, msgs)
 
 -- | Read a Word8 value from the genome without decoding it
 getRawWord8 :: Reader (Either [String] Word8)
 getRawWord8 = do
-  (xs, i) <- S.get
+  (xs, i, msgs) <- S.get
   let xs' = drop i xs
   if null xs'
      then return $ Left ["End of sequence"]
      else do
        let x = head xs'
-       S.put (xs, i+1)
+       S.put (xs, i+1, msgs)
        return $ Right x
 
 -- | Write a raw sequence of Word8 values to the genome
 putRawWord8s :: [Word8] -> Writer ()
-putRawWord8s ys = do
-  xs <- S.get
-  S.put (reverse ys ++ xs)
+putRawWord8s ws = mapM_ putRawWord8 ws
 
 -- | Read a raw sequence of Word8 values from the genome
 getRawWord8s :: Int -> Reader (Either [String] [Word8])
-getRawWord8s n =
-  if n == 0
-    then return $ Right []
-    else do
-      (xs, i) <- S.get
-      let xs' = drop i xs
-      if null xs' || length xs' < n
-        then return $ Left ["End of genes"]
-        else do
-          let ys = take n xs'
-          S.put (xs, i+n)
-          return $ Right ys
+getRawWord8s n = fmap sequence $ replicateM n getRawWord8
 
+reportW :: String -> Writer ()
+reportW desc = do
+  (xs, msgs) <- S.get
+  let msg = show (length xs) ++ ": wrote " ++ desc
+  S.put (xs, msg:msgs)
+  
+putAndReport :: [Word8] -> String -> Writer ()
+putAndReport bytes msg = putRawWord8s bytes >> reportW msg
+
+replaceReportW :: String -> Writer ()
+replaceReportW desc = do
+  (xs, _:msgs) <- S.get
+  let msg = show (length xs) ++ ": wrote " ++ desc
+  S.put (xs, msg:msgs)
+  
+reportR :: String -> Reader ()
+reportR desc = do
+  (xs, i, msgs) <- S.get
+  let msg = show i ++ ": read " ++ desc
+  S.put (xs, i, msg:msgs)
+
+getAndReport :: Int -> ([Word8] -> (Either String (g, String))) -> Reader (Either [String] g)
+getAndReport n parse = do
+  a <- getRawWord8s n
+  case a of
+   Right xs    -> case parse xs of
+                    Right (g, msg) -> reportR msg >> return (Right g)
+                    Left errMsg2   -> return $ Left [errMsg2]
+   Left errMsg -> return $ Left errMsg
+
+replaceReportR :: String -> Reader ()
+replaceReportR desc = do
+  (xs, i, _:msgs) <- S.get
+  let msg = show i ++ ": read " ++ desc
+  S.put (xs, i, msg:msgs)
+  
 --
 -- Diploid genes
 --
 
 type DiploidSequence = (Sequence, Sequence)
 
-type DiploidReader = StateT ((Sequence, Int), (Sequence, Int)) Identity
+type DiploidReader = StateT ((Sequence, Int, [String]), (Sequence, Int, [String])) Identity
 
 readAndExpress :: (Genetic g, Diploid g) => DiploidSequence -> Either [String] g
-readAndExpress (s1, s2) = evalState getAndExpress ((s1, 0), (s2, 0))
+readAndExpress (s1, s2) = evalState getAndExpress ((s1, 0, []), (s2, 0, []))
 
 runDiploidReader :: DiploidReader g -> DiploidSequence -> g
-runDiploidReader r (s1, s2) = evalState r ((s1, 0), (s2, 0))
+runDiploidReader r (s1, s2) = evalState r ((s1, 0, []), (s2, 0, []))
 
 -- | Return the entire genome.
 copy2 :: DiploidReader DiploidSequence

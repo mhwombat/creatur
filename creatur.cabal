@@ -4,19 +4,19 @@ Stability:         experimental
 Synopsis:          Framework for artificial life experiments.
 Description:       A software framework for automating experiments
                    with artificial life. It provides a daemon which
-                   maintains its own "clock", schedules events, 
-                   provides logging, and ensures that each agent gets 
-                   its turn to use the CPU. You can use other 
+                   maintains its own "clock", schedules events,
+                   provides logging, and ensures that each agent gets
+                   its turn to use the CPU. You can use other
                    applications on the computer at the same time
                    without fear of interfering with experiments; they
-                   will run normally, just more slowly. See the 
-                   tutorial at 
+                   will run normally, just more slowly. See the
+                   tutorial at
                    <https://github.com/mhwombat/creatur-examples/raw/master/Tutorial.pdf>
                    for examples on how to use the
                    Créatúr framework.
                    .
                    About the name: \"Créatúr\" (pronounced kray-toor)
-                   is an Irish word meaning animal, creature, or an 
+                   is an Irish word meaning animal, creature, or an
                    unfortunate person.
 Category:          AI
 License:           BSD3
@@ -41,7 +41,7 @@ source-repository this
 library
   GHC-Options:      -Wall -fno-warn-orphans
   Hs-source-dirs:   src
-  exposed-modules:  
+  exposed-modules:
                     ALife.Creatur,
                     ALife.Creatur.Checklist,
                     ALife.Creatur.Clock,
@@ -68,7 +68,7 @@ library
                     ALife.Creatur.Task,
                     ALife.Creatur.Util
   Other-modules:    Paths_creatur
-  Build-Depends:    
+  Build-Depends:
                     array ==0.5.*,
                     base ==4.*,
                     bytestring ==0.10.*,
@@ -95,7 +95,7 @@ Test-suite creatur-tests
   Main-is:          TestAll.hs
   GHC-Options:      -Wall
   Hs-source-dirs:   test
-  Build-Depends:    
+  Build-Depends:
                     array ==0.5.*,
                     base ==4.*,
                     binary ==0.7.*,
@@ -126,17 +126,16 @@ Test-suite creatur-tests
                     ALife.Creatur.PersistentQC
                     ALife.Creatur.UniverseQC
                     ALife.Creatur.UtilQC
-                    
+
 
 -- Benchmark creatur-bench
 --   Type:             exitcode-stdio-1.0
 --   Main-is:          BenchAll.hs
 --   GHC-Options:      -Wall
 --   Hs-source-dirs:   test
---   Build-Depends:    
+--   Build-Depends:
 --                     base ==4.*,
 --                     creatur,
 --                     criterion ==0.8.*,
 --                     test-framework ==0.8.*
 --   Other-modules:    ALife.Creatur.Genetics.BRGCWord8Bench
-
