@@ -9,7 +9,7 @@
 --
 -- Provides tasks that you can use with a daemon. These tasks handle
 -- reading and writing agents, and various other housekeeping chores,
--- which reduces the amount of code you need to write. 
+-- which reduces the amount of code you need to write.
 --
 -- It’s also easy to write your own tasks, using these as a guide.)
 --
@@ -41,6 +41,7 @@ import ALife.Creatur.Universe (Universe, Agent, AgentProgram,
 import Control.Conditional (whenM)
 import Control.Exception (SomeException)
 import Control.Monad (when)
+import qualified Control.Monad.Catch as C
 import Control.Monad.State (StateT, execStateT, evalStateT)
 import Control.Monad.Trans.Class (lift)
 import Data.Serialize (Serialize)
@@ -79,9 +80,10 @@ runNoninteractingAgents agentProgram startRoundProgram
   as <- lineup
   when (not . null $ as) $ do
     let a = head as
+    C.onException
+      (withAgent agentProgram a)
+      (writeToLog "Continuing after exception")
     markDone a
-    -- do that first in case the next line triggers an exception
-    withAgent agentProgram a
     atEndOfRound endRoundProgram
 
 --   The input parameter is a list of agents. The first agent in the
@@ -101,9 +103,10 @@ runInteractingAgents agentsProgram startRoundProgram
     endRoundProgram = do
   atStartOfRound startRoundProgram
   as <- lineup
+  C.onException
+    (withAgents agentsProgram as)
+    (writeToLog "Continuing after exception")
   markDone (head as)
-  -- do that first in case the next line triggers an exception
-  withAgents agentsProgram as
   atEndOfRound endRoundProgram
 
 checkPopSize :: Universe u => (Int, Int) -> StateT u IO ()
