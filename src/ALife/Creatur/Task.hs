@@ -41,7 +41,7 @@ import ALife.Creatur.Universe (Universe, Agent, AgentProgram,
 import Control.Conditional (whenM)
 import Control.Exception (SomeException)
 import Control.Monad (when)
-import qualified Control.Monad.Catch as C
+import Control.Monad.Catch (catchAll)
 import Control.Monad.State (StateT, execStateT, evalStateT)
 import Control.Monad.Trans.Class (lift)
 import Data.Serialize (Serialize)
@@ -80,9 +80,7 @@ runNoninteractingAgents agentProgram startRoundProgram
   as <- lineup
   when (not . null $ as) $ do
     let a = head as
-    C.onException
-      (withAgent agentProgram a)
-      (writeToLog "Continuing after exception")
+    catchAll (withAgent agentProgram a) reportException
     markDone a
     atEndOfRound endRoundProgram
 
@@ -103,11 +101,13 @@ runInteractingAgents agentsProgram startRoundProgram
     endRoundProgram = do
   atStartOfRound startRoundProgram
   as <- lineup
-  C.onException
-    (withAgents agentsProgram as)
-    (writeToLog "Continuing after exception")
+  catchAll (withAgents agentsProgram as) reportException
   markDone (head as)
   atEndOfRound endRoundProgram
+
+reportException :: Universe u => SomeException -> StateT u IO ()
+reportException e =
+  writeToLog $ "Unhandled exception: " ++ show e
 
 checkPopSize :: Universe u => (Int, Int) -> StateT u IO ()
 checkPopSize (minAgents, maxAgents) = do
