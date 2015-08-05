@@ -107,7 +107,7 @@ runInteractingAgents agentsProgram startRoundProgram
 
 reportException :: Universe u => SomeException -> StateT u IO ()
 reportException e =
-  writeToLog $ "Unhandled exception: " ++ show e
+  writeToLog $ "WARNING: Unhandled exception: " ++ show e
 
 checkPopSize :: Universe u => (Int, Int) -> StateT u IO ()
 checkPopSize (minAgents, maxAgents) = do
