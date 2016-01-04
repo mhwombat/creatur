@@ -22,7 +22,7 @@ import Prelude hiding (read)
 import ALife.Creatur.Genetics.BRGCWord8
 import ALife.Creatur.Genetics.Analysis (Analysable)
 import ALife.Creatur.Util (fromEither)
-import Data.Word (Word8, Word16)
+import Data.Word (Word8, Word16, Word32, Word64)
 import GHC.Generics (Generic)
 import Test.Framework as TF (Test, testGroup)
 import Test.Framework.Providers.QuickCheck2 (testProperty)
@@ -80,6 +80,10 @@ test = testGroup "ALife.Creatur.Genetics.BRGCWord8QC"
       (prop_round_trippable :: Word8 -> Property),
     testProperty "prop_round_trippable - Word16"
       (prop_round_trippable :: Word16 -> Property),
+    testProperty "prop_round_trippable - Word32"
+      (prop_round_trippable :: Word32 -> Property),
+    testProperty "prop_round_trippable - Word64"
+      (prop_round_trippable :: Word64 -> Property),
     testProperty "prop_round_trippable - TestStructure"
       (prop_round_trippable :: TestStructure -> Property),
     testProperty "prop_rawWord8s_round_trippable"

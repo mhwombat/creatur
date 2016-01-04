@@ -65,7 +65,7 @@ import qualified Control.Monad.State.Lazy as S (put, get, gets)
 import Data.Char (ord, chr)
 import Data.Either (partitionEithers)
 import Data.Functor.Identity (Identity)
-import Data.Word (Word8, Word16)
+import Data.Word (Word8, Word16, Word32, Word64)
 import GHC.Generics
 
 #if MIN_VERSION_base(4,8,0)
@@ -205,18 +205,43 @@ instance Genetic Word8 where
           convert _ = Left "logic error"
 
 instance Genetic Word16 where
-  put g = putAndReport
-            [fromIntegral $ x `div` 0x100, fromIntegral $ x `mod` 0x100]
-              (show g ++ " Word16")
+  put g = putAndReport (integralToBytes 2 x) (show g ++ " Word16")
     where x = integralToGray g
   get = getAndReport 2 grayWord16
 
+instance Genetic Word32 where
+  put g = putAndReport (integralToBytes 4 x) (show g ++ " Word32")
+    where x = integralToGray g
+  get = getAndReport 4 grayWord32
+
+instance Genetic Word64 where
+  put g = putAndReport (integralToBytes 8 x) (show g ++ " Word64")
+    where x = integralToGray g
+  get = getAndReport 8 grayWord64
+
 grayWord16 :: [Word8] -> Either String (Word16, String)
-grayWord16 (x:y:[]) = Right (g, show g ++ " Word16")
-  where g = grayToIntegral (high + low) :: Word16
-        high = fromIntegral x * 0x100
-        low = fromIntegral y
-grayWord16 _ = Left "logic error"
+grayWord16 bs = Right (g, show g ++ " Word16")
+  where g = grayToIntegral . bytesToIntegral $ bs
+
+grayWord32 :: [Word8] -> Either String (Word32, String)
+grayWord32 bs = Right (g, show g ++ " Word32")
+  where g = grayToIntegral . bytesToIntegral $ bs
+
+grayWord64 :: [Word8] -> Either String (Word64, String)
+grayWord64 bs = Right (g, show g ++ " Word64")
+  where g = grayToIntegral . bytesToIntegral $ bs
+
+integralToBytes :: Integral t => Int -> t -> [Word8]
+integralToBytes n x = f n x []
+  where f 0 _ bs = bs
+        f m y bs = f (m-1) y' (b:bs)
+          where y' = y `div` 0x100
+                b = fromIntegral $ y `mod` 0x100
+ 
+bytesToIntegral :: Integral t => [Word8] -> t
+bytesToIntegral bs = f (bs, 0)
+  where f ([], n) = n
+        f (k:ks, n) = f (ks, n*0x100 + fromIntegral k)
 
 instance (Genetic a) => Genetic [a] where
   put xs = do
