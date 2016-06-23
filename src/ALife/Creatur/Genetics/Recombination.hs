@@ -29,6 +29,7 @@ module ALife.Creatur.Genetics.Recombination
 import ALife.Creatur.Util (safeReplaceElement)
 
 import System.Random (Random)
+import Control.Exception.Base (assert)
 import Control.Monad.Random (Rand, RandomGen, getRandom, getRandomR)
 
 -- | Cuts two lists at the specified locations, swaps the ends, and 
@@ -166,7 +167,7 @@ randomOneOfList xs = do
 -- | Choose an element at random from a list and return the element and its 
 --   index
 randomListSelection :: RandomGen g => [a] -> Rand g (Int, a)
-randomListSelection xs = do
+randomListSelection xs = assert (not . null $ xs) $ do
   i <- getRandomR (0,length xs - 1)
   return (i, xs !! i)
 
