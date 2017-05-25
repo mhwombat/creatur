@@ -39,12 +39,9 @@ packages:
 - '.'
 # Dependency packages to be pulled from upstream that are not in the resolver
 # (e.g., acme-missiles-0.3)
-extra-deps:
-- binary-0.7.6.1
+extra-deps: 
 - cond-0.4.1.1
 - gray-extended-1.5.2
-- hdaemonize-0.5.0.2
-- hsyslog-2.0
 
 # Override default flag values for local packages and extra-deps
 flags: {}

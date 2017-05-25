@@ -11,7 +11,8 @@
 -- framework.
 --
 ------------------------------------------------------------------------
-{-# LANGUAGE TypeFamilies, FlexibleContexts #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module ALife.Creatur.Daemon
   (
@@ -28,12 +29,14 @@ import Control.Concurrent (MVar, newMVar, readMVar, swapMVar,
 import Control.Exception (SomeException, handle, catch)
 import Control.Monad (when)
 import Control.Monad.State (StateT, execStateT)
+import Data.ByteString.Char8 (pack)
 import System.IO (hPutStr, stderr)
 import System.IO.Unsafe (unsafePerformIO)
 import qualified System.Posix.Daemonize as D
 import System.Posix.Signals (Handler(Catch), fullSignalSet, 
   installHandler, sigTERM)
-import System.Posix.Syslog (Priority(Warning), syslog)
+import System.Posix.Syslog (Priority(Warning), Facility(DAEMON),
+  syslogUnsafe)
 import System.Posix.User (getLoginName, getRealUserID)
 
 termReceived :: MVar Bool
@@ -111,7 +114,7 @@ wrap :: IO () -> IO ()
 wrap t = catch t
   (\e -> do
      let err = show (e :: SomeException)
-     syslog Warning ("Unhandled exception: " ++ err)
+     syslogUnsafe DAEMON Warning $ pack ("Unhandled exception: " ++ err)
      hPutStr stderr ("Unhandled exception: " ++ err)
      return ())
 

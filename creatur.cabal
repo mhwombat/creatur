@@ -1,123 +1,125 @@
-Name:              creatur
-Version:           5.9.15
-Stability:         experimental
-Synopsis:          Framework for artificial life experiments.
-Description:       A software framework for automating experiments
-                   with artificial life. It provides a daemon which
-                   maintains its own "clock", schedules events,
-                   provides logging, and ensures that each agent gets
-                   its turn to use the CPU. You can use other
-                   applications on the computer at the same time
-                   without fear of interfering with experiments; they
-                   will run normally, just more slowly. See the
-                   tutorial at
-                   <https://github.com/mhwombat/creatur-examples/raw/master/Tutorial.pdf>
-                   for examples on how to use the
-                   Créatúr framework.
-                   .
-                   About the name: \"Créatúr\" (pronounced kray-toor)
-                   is an Irish word meaning animal, creature, or an
-                   unfortunate person.
-Category:          AI
-License:           BSD3
-License-file:      LICENSE
-Copyright:         (c) Amy de Buitléir 2010-2016
-Homepage:          https://github.com/mhwombat/creatur
-Bug-reports:       https://github.com/mhwombat/creatur/issues
-Author:            Amy de Buitléir
-Maintainer:        amy@nualeargais.ie
-Build-Type:        Simple
-Cabal-Version:     >=1.8
+name: creatur
+version: 5.9.16
+cabal-version: >=1.8
+build-type: Simple
+license: BSD3
+license-file: LICENSE
+copyright: (c) Amy de Buitléir 2010-2016
+maintainer: amy@nualeargais.ie
+stability: experimental
+homepage: https://github.com/mhwombat/creatur
+bug-reports: https://github.com/mhwombat/creatur/issues
+synopsis: Framework for artificial life experiments.
+description:
+    A software framework for automating experiments
+    with artificial life. It provides a daemon which
+    maintains its own "clock", schedules events,
+    provides logging, and ensures that each agent gets
+    its turn to use the CPU. You can use other
+    applications on the computer at the same time
+    without fear of interfering with experiments; they
+    will run normally, just more slowly. See the
+    tutorial at
+    <https://github.com/mhwombat/creatur-examples/raw/master/Tutorial.pdf>
+    for examples on how to use the
+    Créatúr framework.
+    .
+    About the name: \"Créatúr\" (pronounced kray-toor)
+    is an Irish word meaning animal, creature, or an
+    unfortunate person.
+category: AI
+author: Amy de Buitléir
 
 library
-  GHC-Options:      -Wall -fno-warn-orphans
-  Hs-source-dirs:   src
-  exposed-modules:
-                    ALife.Creatur,
-                    ALife.Creatur.Checklist,
-                    ALife.Creatur.Clock,
-                    ALife.Creatur.Counter,
-                    ALife.Creatur.Daemon,
-                    ALife.Creatur.Database,
-                    ALife.Creatur.Database.CachedFileSystem,
-                    ALife.Creatur.Database.CachedFileSystemInternal,
-                    ALife.Creatur.Database.FileSystem,
-                    ALife.Creatur.Genetics.Analysis,
-                    ALife.Creatur.Genetics.BRGCBool,
-                    ALife.Creatur.Genetics.BRGCWord8,
-                    ALife.Creatur.Genetics.BRGCWord16,
-                    ALife.Creatur.Genetics.Diploid,
-                    ALife.Creatur.Genetics.Recombination,
-                    ALife.Creatur.Genetics.Reproduction.Sexual,
-                    ALife.Creatur.Genetics.Reproduction.SimplifiedSexual,
-                    ALife.Creatur.Logger,
-                    ALife.Creatur.Logger.SimpleLogger,
-                    ALife.Creatur.Logger.SimpleRotatingLogger,
-                    ALife.Creatur.Namer,
-                    ALife.Creatur.Persistent,
-                    ALife.Creatur.Universe,
-                    ALife.Creatur.Task,
-                    ALife.Creatur.Util
-  Other-modules:    Paths_creatur
-  Build-Depends:
-                    array ==0.5.*,
-                    base ==4.* && >= 4.8,
-                    bytestring ==0.10.*,
-                    cond ==0.4.*,
-                    cereal ==0.5.*,
-                    directory ==1.3.*,
-                    exceptions ==0.8.*,
-                    filepath ==1.4.*,
-                    gray-extended ==1.*,
-                    hdaemonize ==0.5.*,
-                    hsyslog ==2.0,
-                    MonadRandom ==0.5.*,
-                    mtl ==2.2.*,
-                    old-locale ==1.0.*,
-                    process ==1.4.*,
-                    random ==1.1.*,
-                    split ==0.2.*,
-                    time ==1.6.*,
-                    transformers ==0.5.*,
-                    unix ==2.7.*,
-                    zlib ==0.6.*
+    exposed-modules:
+        ALife.Creatur
+        ALife.Creatur.Checklist
+        ALife.Creatur.Clock
+        ALife.Creatur.Counter
+        ALife.Creatur.Daemon
+        ALife.Creatur.Database
+        ALife.Creatur.Database.CachedFileSystem
+        ALife.Creatur.Database.CachedFileSystemInternal
+        ALife.Creatur.Database.FileSystem
+        ALife.Creatur.Genetics.Analysis
+        ALife.Creatur.Genetics.BRGCBool
+        ALife.Creatur.Genetics.BRGCWord8
+        ALife.Creatur.Genetics.BRGCWord16
+        ALife.Creatur.Genetics.Diploid
+        ALife.Creatur.Genetics.Recombination
+        ALife.Creatur.Genetics.Reproduction.Sexual
+        ALife.Creatur.Genetics.Reproduction.SimplifiedSexual
+        ALife.Creatur.Logger
+        ALife.Creatur.Logger.SimpleLogger
+        ALife.Creatur.Logger.SimpleRotatingLogger
+        ALife.Creatur.Namer
+        ALife.Creatur.Persistent
+        ALife.Creatur.Universe
+        ALife.Creatur.Task
+        ALife.Creatur.Util
+    build-depends:
+        array,
+        base,
+        bytestring,
+        cond,
+        cereal,
+        directory,
+        exceptions,
+        filepath,
+        gray-extended,
+        hdaemonize,
+        hsyslog,
+        MonadRandom,
+        mtl,
+        old-locale,
+        process,
+        random,
+        split,
+        time,
+        transformers,
+        unix,
+        zlib
+    hs-source-dirs: src
+    other-modules:
+        Paths_creatur
+    ghc-options: -Wall -fno-warn-orphans
 
-Test-suite creatur-tests
-  Type:             exitcode-stdio-1.0
-  Main-is:          TestAll.hs
-  GHC-Options:      -Wall
-  Hs-source-dirs:   test
-  Build-Depends:
-                    array ==0.5.*,
-                    base ==4.* && >= 4.8,
-                    binary ==0.7.*,
-                    cereal ==0.5.*,
-                    creatur,
-                    directory ==1.3.*,
-                    filepath ==1.4.*,
-                    hsyslog ==2.0,
-                    HUnit ==1.5.*,
-                    MonadRandom ==0.5.*,
-                    mtl ==2.2.*,
-                    temporary ==1.2.*,
-                    test-framework ==0.8.*,
-                    test-framework-hunit ==0.3.*,
-                    test-framework-quickcheck2 ==0.3.*,
-                    QuickCheck ==2.9.*
-  Other-modules:    ALife.Creatur.ChecklistQC
-                    ALife.Creatur.CounterQC
-                    ALife.Creatur.Database.CachedFileSystemQC
-                    ALife.Creatur.Database.FileSystemQC
-                    ALife.Creatur.Genetics.BRGCBoolBench
-                    ALife.Creatur.Genetics.BRGCBoolQC
-                    ALife.Creatur.Genetics.BRGCWord16QC
-                    ALife.Creatur.Genetics.BRGCWord8Bench
-                    ALife.Creatur.Genetics.BRGCWord8QC
-                    ALife.Creatur.Genetics.DiploidQC,
-                    ALife.Creatur.Genetics.RecombinationQC
-                    ALife.Creatur.PersistentQC
-                    ALife.Creatur.UniverseQC
-                    ALife.Creatur.UtilQC
+test-suite creatur-tests
+    type: exitcode-stdio-1.0
+    main-is: TestAll.hs
+    build-depends:
+        array,
+        base,
+        binary,
+        cereal,
+        creatur,
+        directory,
+        filepath,
+        hsyslog,
+        HUnit,
+        MonadRandom,
+        mtl,
+        temporary,
+        test-framework,
+        test-framework-hunit,
+        test-framework-quickcheck2,
+        QuickCheck
+    hs-source-dirs: test
+  other-modules:    ALife.Creatur.ChecklistQC
+        ALife.Creatur.CounterQC
+        ALife.Creatur.Database.CachedFileSystemQC
+        ALife.Creatur.Database.FileSystemQC
+        ALife.Creatur.Genetics.BRGCBoolBench
+        ALife.Creatur.Genetics.BRGCBoolQC
+        ALife.Creatur.Genetics.BRGCWord16QC
+        ALife.Creatur.Genetics.BRGCWord8Bench
+        ALife.Creatur.Genetics.BRGCWord8QC
+        ALife.Creatur.Genetics.DiploidQC,
+        ALife.Creatur.Genetics.RecombinationQC
+        ALife.Creatur.PersistentQC
+        ALife.Creatur.UniverseQC
+        ALife.Creatur.UtilQC
+  ghc-options: -Wall
 
 
 -- Benchmark creatur-bench
