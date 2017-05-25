@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------
 -- |
 -- Module      :  ALife.Creatur.Database
--- Copyright   :  (c) Amy de Buitléir 2012-2015
+-- Copyright   :  (c) Amy de Buitléir 2012-2016
 -- License     :  BSD-style
 -- Maintainer  :  amy@nualeargais.ie
 -- Stability   :  experimental
@@ -10,7 +10,7 @@
 -- Database interface for the Créatúr framework.
 --
 ------------------------------------------------------------------------
-{-# LANGUAGE TypeFamilies, FlexibleContexts #-}
+{-# LANGUAGE TypeFamilies, FlexibleContexts, ConstrainedClassMethods #-}
 
 module ALife.Creatur.Database
  (

@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------
 -- |
 -- Module      :  ALife.Creatur.Genetics.BRGCBoolBench
--- Copyright   :  (c) Amy de Buitléir 2014-2015
+-- Copyright   :  (c) Amy de Buitléir 2014-2016
 -- License     :  BSD-style
 -- Maintainer  :  amy@nualeargais.ie
 -- Stability   :  experimental

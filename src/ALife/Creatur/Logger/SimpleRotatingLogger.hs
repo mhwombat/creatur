@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------
 -- |
 -- Module      :  ALife.Creatur.Logger.SimpleRotatingLogger
--- Copyright   :  (c) Amy de Buitléir 2011-2015
+-- Copyright   :  (c) Amy de Buitléir 2011-2016
 -- License     :  BSD-style
 -- Maintainer  :  amy@nualeargais.ie
 -- Stability   :  experimental
