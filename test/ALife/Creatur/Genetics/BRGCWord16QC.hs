@@ -25,8 +25,8 @@ import Data.Word (Word8, Word16)
 import GHC.Generics (Generic)
 import Test.Framework as TF (Test, testGroup)
 import Test.Framework.Providers.QuickCheck2 (testProperty)
-import Test.QuickCheck (Arbitrary, Gen, Property, arbitrary, choose,
-  oneof, property, sized, vectorOf)
+import Test.QuickCheck (Arbitrary, Gen, Property, arbitrary,
+  choose, oneof, property, sized, vectorOf)
 
 #if MIN_VERSION_base(4,8,0)
 #else
@@ -38,7 +38,7 @@ prop_round_trippable g = property $ g' == Right g
   where x = write g
         g' = read x
 
-data TestStructure = A | B Bool | C Word16 | D Word8 Char | E [TestStructure]
+data TestStructure = A | B Bool | C Word8 | D Word16 Char | E [TestStructure]
   deriving (Show, Eq, Generic)
 
 instance Genetic TestStructure
@@ -72,6 +72,16 @@ test = testGroup "ALife.Creatur.Genetics.BRGCWord16QC"
       (prop_round_trippable :: Word8 -> Property),
     testProperty "prop_round_trippable - Word16"
       (prop_round_trippable :: Word16 -> Property),
+    -- testProperty "prop_round_trippable - Word32"
+    --   (prop_round_trippable :: Word32 -> Property),
+    -- testProperty "prop_round_trippable - Word64"
+    --   (prop_round_trippable :: Word64 -> Property),
+    testProperty "prop_round_trippable - Int"
+      (prop_round_trippable :: Int -> Property),
+    -- testProperty "prop_round_trippable - Integer"
+    --   (prop_round_trippable :: Integer -> Property),
+    -- testProperty "prop_round_trippable - Double"
+    --   (prop_round_trippable :: Double -> Property),
     testProperty "prop_round_trippable - TestStructure"
       (prop_round_trippable :: TestStructure -> Property)
   ]
