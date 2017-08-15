@@ -91,6 +91,12 @@ test = testGroup "ALife.Creatur.Genetics.BRGCWord8QC"
       (prop_round_trippable :: Word32 -> Property),
     testProperty "prop_round_trippable - Word64"
       (prop_round_trippable :: Word64 -> Property),
+    testProperty "prop_round_trippable - Int"
+      (prop_round_trippable :: Int -> Property),
+    testProperty "prop_round_trippable - Integer"
+      (prop_round_trippable :: Integer -> Property),
+    testProperty "prop_round_trippable - Double"
+      (prop_round_trippable :: Double -> Property),
     testProperty "prop_round_trippable2 - Word8"
       (prop_round_trippable2 1 :: [Word8] -> Word8 -> Property),
     testProperty "prop_round_trippable2 - Word16"

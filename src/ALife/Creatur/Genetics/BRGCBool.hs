@@ -184,9 +184,11 @@ instance Genetic Bool where
          return $ Right x
 
 instance Genetic Char where
-  put = putRawBoolArray . intToBools 8 . ord
+  put c = do
+    let bs = map (\b -> b == '1') $ showIntAtBase 2 intToDigit (ord c) ""
+    put bs
   get = do
-    bs <- getRawBoolArray 8
+    bs <- get
     return . fmap chr $ fmap boolsToInt bs
 
 instance Genetic Word8 where

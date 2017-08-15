@@ -29,14 +29,13 @@ import Control.Concurrent (MVar, newMVar, readMVar, swapMVar,
 import Control.Exception (SomeException, handle, catch)
 import Control.Monad (when)
 import Control.Monad.State (StateT, execStateT)
-import Data.ByteString.Char8 (pack)
+import Foreign.C.String (withCStringLen)
 import System.IO (hPutStr, stderr)
 import System.IO.Unsafe (unsafePerformIO)
 import qualified System.Posix.Daemonize as D
 import System.Posix.Signals (Handler(Catch), fullSignalSet, 
   installHandler, sigTERM)
-import System.Posix.Syslog (Priority(Warning), Facility(DAEMON),
-  syslogUnsafe)
+import System.Posix.Syslog (Priority(Warning), Facility(Daemon), syslog)
 import System.Posix.User (getLoginName, getRealUserID)
 
 termReceived :: MVar Bool
@@ -114,7 +113,7 @@ wrap :: IO () -> IO ()
 wrap t = catch t
   (\e -> do
      let err = show (e :: SomeException)
-     syslogUnsafe DAEMON Warning $ pack ("Unhandled exception: " ++ err)
+     withCStringLen ("Unhandled exception: " ++ err) $ syslog (Just Daemon) Warning
      hPutStr stderr ("Unhandled exception: " ++ err)
      return ())
 

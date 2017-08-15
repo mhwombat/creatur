@@ -62,6 +62,8 @@ import Codec.Gray (integralToGray, grayToIntegral)
 import Control.Monad (replicateM)
 import Control.Monad.State.Lazy (StateT, runState, execState, evalState)
 import qualified Control.Monad.State.Lazy as S (put, get, gets)
+import Data.Binary (Binary, encode, decode)
+import Data.ByteString.Lazy (pack, unpack)
 import Data.Char (ord, chr)
 import Data.Either (partitionEithers)
 import Data.Functor.Identity (Identity)
@@ -191,11 +193,16 @@ word8ToBool :: Word8 -> Bool
 word8ToBool x = if even x then False else True
 
 instance Genetic Char where
-  put x = putAndReport [fromIntegral . ord $ x] (show x)
-  get = getAndReport 1 convert
-    where convert (x:[]) = Right (g, show g)
-            where g = (chr . fromIntegral) x
-          convert _ = Left "logic error"
+  put c = do
+    put . ord $ c
+    replaceReportW [c]
+  get = do
+    x <- get
+    case x of
+      Right x' -> do let c = chr x'
+                     replaceReportR [c]
+                     return $ Right c
+      Left s   -> return $ Left s
 
 instance Genetic Word8 where
   put x = putAndReport [integralToGray x] (show x ++ " Word8")
@@ -219,29 +226,33 @@ instance Genetic Word64 where
     where x = integralToGray g
   get = getAndReport 8 grayWord64
 
-grayWord16 :: [Word8] -> Either String (Word16, String)
-grayWord16 bs = Right (g, show g ++ " Word16")
-  where g = grayToIntegral . bytesToIntegral $ bs
+instance Genetic Int where
+  put g = put (map integralToGray . integralToByteArray $ g)
+  get = do
+    x <- get
+    case x of
+      Right xs -> return $ Right (byteArrayToIntegral . map grayToIntegral $ xs)
+      Left s   -> return $ Left s
 
-grayWord32 :: [Word8] -> Either String (Word32, String)
-grayWord32 bs = Right (g, show g ++ " Word32")
-  where g = grayToIntegral . bytesToIntegral $ bs
+instance Genetic Integer where
+  put g = put (map integralToGray . integralToByteArray $ g)
+  get = do
+    x <- get
+    case x of
+      Right xs -> return $ Right (byteArrayToIntegral . map grayToIntegral $ xs)
+      Left s   -> return $ Left s
 
-grayWord64 :: [Word8] -> Either String (Word64, String)
-grayWord64 bs = Right (g, show g ++ " Word64")
-  where g = grayToIntegral . bytesToIntegral $ bs
-
-integralToBytes :: Integral t => Int -> t -> [Word8]
-integralToBytes n x = f n x []
-  where f 0 _ bs = bs
-        f m y bs = f (m-1) y' (b:bs)
-          where y' = y `div` 0x100
-                b = fromIntegral $ y `mod` 0x100
- 
-bytesToIntegral :: Integral t => [Word8] -> t
-bytesToIntegral bs = f (bs, 0)
-  where f ([], n) = n
-        f (k:ks, n) = f (ks, n*0x100 + fromIntegral k)
+instance Genetic Double where
+  put g = put m >> put n
+    where (m, n) = decodeFloat g
+  get = do
+    m <- get
+    case m of
+      Right m' -> do n <- get
+                     case n of
+                       Right n' -> return $ Right (encodeFloat m' n')
+                       Left s'  -> return $ Left s'
+      Left s   -> return $ Left s
 
 instance (Genetic a) => Genetic [a] where
   put xs = do
@@ -269,6 +280,36 @@ instance (Genetic a, Genetic b) => Genetic (Either a b)
 --
 -- Utilities
 --
+
+grayWord16 :: [Word8] -> Either String (Word16, String)
+grayWord16 bs = Right (g, show g ++ " Word16")
+  where g = grayToIntegral . bytesToIntegral $ bs
+
+grayWord32 :: [Word8] -> Either String (Word32, String)
+grayWord32 bs = Right (g, show g ++ " Word32")
+  where g = grayToIntegral . bytesToIntegral $ bs
+
+grayWord64 :: [Word8] -> Either String (Word64, String)
+grayWord64 bs = Right (g, show g ++ " Word64")
+  where g = grayToIntegral . bytesToIntegral $ bs
+
+integralToBytes :: Integral t => Int -> t -> [Word8]
+integralToBytes n x = f n x []
+  where f 0 _ bs = bs
+        f m y bs = f (m-1) y' (b:bs)
+          where y' = y `div` 0x100
+                b = fromIntegral $ y `mod` 0x100
+ 
+bytesToIntegral :: Integral t => [Word8] -> t
+bytesToIntegral bs = f (bs, 0)
+  where f ([], n) = n
+        f (k:ks, n) = f (ks, n*0x100 + fromIntegral k)
+
+integralToByteArray :: (Integral t, Binary t) => t -> [Word8]
+integralToByteArray = unpack . encode
+
+byteArrayToIntegral :: (Integral t, Binary t) => [Word8] -> t
+byteArrayToIntegral = decode . pack
 
 finalise :: Writer ()
 finalise = do

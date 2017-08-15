@@ -58,6 +58,8 @@ import ALife.Creatur.Util (fromEither)
 import Codec.Gray (integralToGray, grayToIntegral)
 import Control.Monad.State.Lazy (StateT, runState, execState, evalState)
 import qualified Control.Monad.State.Lazy as S (put, get, gets)
+import Data.Binary (Binary, encode, decode)
+import Data.ByteString.Lazy (pack, unpack)
 import Data.Char (ord, chr)
 import Data.Functor.Identity (Identity)
 import Data.Word (Word8, Word16)
@@ -182,8 +184,8 @@ word16ToBool :: Word16 -> Bool
 word16ToBool x = if even x then False else True
 
 instance Genetic Char where
-  put = putRawWord16 . fromIntegral . ord
-  get = fmap (fmap (chr . fromIntegral)) getRawWord16
+  put = put . ord
+  get = fmap (fmap chr) get
 
 instance Genetic Word8 where
   put x = put (fromIntegral x :: Word16)
@@ -194,6 +196,14 @@ instance Genetic Word8 where
 instance Genetic Word16 where
   put = putRawWord16 . integralToGray
   get = fmap (fmap grayToIntegral) getRawWord16
+
+instance Genetic Int where
+  put g = put (map integralToGray . integralToByteArray $ g)
+  get = do
+    x <- get
+    case x of
+      Right xs -> return $ Right (byteArrayToIntegral . map grayToIntegral $ xs)
+      Left s   -> return $ Left s
 
 instance (Genetic a) => Genetic [a]
 
@@ -207,6 +217,12 @@ instance (Genetic a, Genetic b) => Genetic (Either a b)
 --
 -- Utilities
 --
+
+integralToByteArray :: (Integral t, Binary t) => t -> [Word8]
+integralToByteArray = unpack . encode
+
+byteArrayToIntegral :: (Integral t, Binary t) => [Word8] -> t
+byteArrayToIntegral = decode . pack
 
 -- | Write a Word16 value to the genome without encoding it
 putRawWord16 :: Word16 -> Writer ()
