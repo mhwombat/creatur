@@ -40,11 +40,11 @@ packages:
 # Dependency packages to be pulled from upstream that are not in the resolver
 # (e.g., acme-missiles-0.3)
 extra-deps: 
-- gray-extended-1.5.2
 - MonadRandom-0.5.1
 - cereal-0.5.4.0
 - cond-0.4.1.1
 - exceptions-0.8.3
+- gray-extended-1.5.2
 - hdaemonize-0.5.4
 - hsyslog-5.0.1
 - mtl-2.2.1
@@ -65,7 +65,7 @@ extra-deps:
 - test-framework-hunit-0.3.0.2
 - test-framework-quickcheck2-0.3.0.4
 - ansi-terminal-0.6.3.1
-- ansi-wl-pprint-0.6.7.3
+- ansi-wl-pprint-0.6.8.1
 - call-stack-0.1.0
 - hostname-1.0
 - regex-posix-0.95.2
