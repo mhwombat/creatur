@@ -45,6 +45,7 @@ import Control.Monad.Catch (catchAll)
 import Control.Monad.State (StateT, execStateT, evalStateT)
 import Control.Monad.Trans.Class (lift)
 import Data.Serialize (Serialize)
+import GHC.Stack (callStack, prettyCallStack)
 
 simpleJob :: Universe u => Job u
 simpleJob = Job
@@ -106,8 +107,9 @@ runInteractingAgents agentsProgram startRoundProgram
   atEndOfRound endRoundProgram
 
 reportException :: Universe u => SomeException -> StateT u IO ()
-reportException e =
+reportException e = do
   writeToLog $ "WARNING: Unhandled exception: " ++ show e
+  writeToLog $ "WARNING: Call stack: " ++ prettyCallStack callStack
 
 checkPopSize :: Universe u => (Int, Int) -> StateT u IO ()
 checkPopSize (minAgents, maxAgents) = do
