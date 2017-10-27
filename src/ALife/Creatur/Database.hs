@@ -19,6 +19,7 @@ module ALife.Creatur.Database
     SizedRecord(..)
  ) where
 
+import Prelude hiding (lookup)
 import Control.Monad.State (StateT)
 import Data.Serialize (Serialize)
 
@@ -44,6 +45,14 @@ class Database d where
   -- | Read an archived record from the database.
   lookupInArchive :: Serialize (DBRecord d) => 
     String -> StateT d IO (Either String (DBRecord d))
+  -- | Fetch all active records from the database.
+  readAll :: Serialize (DBRecord d) => 
+    StateT d IO [Either String (DBRecord d)]
+  readAll = keys >>= mapM lookup
+  -- | Read all archived records from the database.
+  readAllInArchive :: Serialize (DBRecord d) => 
+    StateT d IO [Either String (DBRecord d)]
+  readAllInArchive = archivedKeys >>= mapM lookupInArchive
   -- | Write a record to the database. 
   --   If an agent with the same name already exists, it will be overwritten.
   store :: (Record (DBRecord d), Serialize (DBRecord d)) => 

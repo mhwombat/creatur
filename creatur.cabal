@@ -1,5 +1,5 @@
 name: creatur
-version: 5.9.21
+version: 5.9.22
 cabal-version: >=1.8
 build-type: Simple
 license: BSD3

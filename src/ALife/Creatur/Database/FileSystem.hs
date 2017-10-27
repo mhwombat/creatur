@@ -125,4 +125,3 @@ writeRecord2 dirGetter r = do
 isRecordFileName :: String -> Bool
 isRecordFileName s =
   s `notElem` [ "archive", ".", ".." ]
-
