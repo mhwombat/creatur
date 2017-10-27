@@ -106,7 +106,8 @@ test-suite creatur-tests
         test-framework-quickcheck2,
         QuickCheck
     hs-source-dirs: test
-  other-modules:    ALife.Creatur.ChecklistQC
+    other-modules:
+        ALife.Creatur.ChecklistQC
         ALife.Creatur.CounterQC
         ALife.Creatur.Database.CachedFileSystemQC
         ALife.Creatur.Database.FileSystemQC
@@ -118,7 +119,7 @@ test-suite creatur-tests
         ALife.Creatur.PersistentQC
         ALife.Creatur.UniverseQC
         ALife.Creatur.UtilQC
-  ghc-options: -Wall
+    ghc-options: -Wall
 
 
 -- Benchmark creatur-bench
