@@ -1,10 +1,10 @@
 name: creatur
-version: 5.9.22
+version: 5.9.23
 cabal-version: >=1.8
 build-type: Simple
 license: BSD3
 license-file: LICENSE
-copyright: (c) Amy de Buitléir 2010-2016
+copyright: (c) Amy de Buitléir 2010-2017
 maintainer: amy@nualeargais.ie
 stability: experimental
 homepage: https://github.com/mhwombat/creatur

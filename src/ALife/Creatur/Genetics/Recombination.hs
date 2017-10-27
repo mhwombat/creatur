@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------
 -- |
 -- Module      :  ALife.Creatur.Genetics.Recombination
--- Copyright   :  (c) Amy de Buitléir 2011-2016
+-- Copyright   :  (c) Amy de Buitléir 2011-2017
 -- License     :  BSD-style
 -- Maintainer  :  amy@nualeargais.ie
 -- Stability   :  experimental
