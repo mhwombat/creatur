@@ -24,16 +24,16 @@ module ALife.Creatur.Daemon
     requestShutdown
   ) where
 
-import Control.Concurrent (MVar, newMVar, readMVar, swapMVar, 
+import Control.Concurrent (MVar, newMVar, readMVar, swapMVar,
   threadDelay)
 import Control.Exception (SomeException, handle, catch)
 import Control.Monad (when)
 import Control.Monad.State (StateT, execStateT)
 import Foreign.C.String (withCStringLen)
-import System.IO (hPutStr, stderr)
+import System.IO (hPutStr, hPutStrLn, stderr)
 import System.IO.Unsafe (unsafePerformIO)
 import qualified System.Posix.Daemonize as D
-import System.Posix.Signals (Handler(Catch), fullSignalSet, 
+import System.Posix.Signals (Handler(Catch), fullSignalSet,
   installHandler, sigTERM)
 import System.Posix.Syslog (Priority(Warning), Facility(Daemon), syslog)
 import System.Posix.User (getLoginName, getRealUserID)
@@ -66,12 +66,13 @@ data CreaturDaemon p s = CreaturDaemon
 --   the login name.
 simpleDaemon :: Job s -> s -> D.CreateDaemon ()
 simpleDaemon j s = D.simpleDaemon { D.program = daemonMain j s,
-                                    D.user    = Just "" }
+                                    D.user    = Just "",
+                                    D.group   = Just ""}
 
 -- | @'launch' daemon state@ creates a daemon, which invokes @daemon@.
 --   *Note:* If @'user'@ (in @'daemon'@) is @Just ""@, the daemon will
 --   run under the login name. If @'user'@ is Nothing, the daemon will
---   run under the name of the executable file containing the daemon. 
+--   run under the name of the executable file containing the daemon.
 launch :: CreaturDaemon p s -> IO ()
 launch d = do
   uid <- getRealUserID
@@ -79,7 +80,15 @@ launch d = do
     then putStrLn "Must run as root"
     else do
       u <- defaultToLoginName (D.user . daemon $ d)
-      D.serviced $ (daemon d) { D.user = u }
+      g <- defaultToLoginName (D.user . daemon $ d)
+      let d' = (daemon d) { D.user = u, D.group = g }
+      catch (D.serviced d') handleLaunchError
+
+handleLaunchError :: SomeException -> IO ()
+handleLaunchError e = do
+  let err = show (e :: SomeException)
+  hPutStrLn stderr ("Warning: Couldn't launch daemon: " ++ err)
+  return ()
 
 launchInteractive :: Job s -> s -> IO ()
 launchInteractive j s = do
@@ -114,7 +123,7 @@ wrap t = catch t
   (\e -> do
      let err = show (e :: SomeException)
      withCStringLen ("Unhandled exception: " ++ err) $ syslog (Just Daemon) Warning
-     hPutStr stderr ("Unhandled exception: " ++ err)
+     hPutStrLn stderr ("Unhandled exception: " ++ err)
      return ())
 
 requestShutdown :: IO ()

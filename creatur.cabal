@@ -1,135 +1,114 @@
-name: creatur
-version: 5.9.23
-cabal-version: >=1.8
-build-type: Simple
-license: BSD3
-license-file: LICENSE
-copyright: (c) Amy de Buitléir 2010-2017
-maintainer: amy@nualeargais.ie
-stability: experimental
-homepage: https://github.com/mhwombat/creatur
-bug-reports: https://github.com/mhwombat/creatur/issues
-synopsis: Framework for artificial life experiments.
-description:
-    A software framework for automating experiments
-    with artificial life. It provides a daemon which
-    maintains its own "clock", schedules events,
-    provides logging, and ensures that each agent gets
-    its turn to use the CPU. You can use other
-    applications on the computer at the same time
-    without fear of interfering with experiments; they
-    will run normally, just more slowly. See the
-    tutorial at
-    <https://github.com/mhwombat/creatur-examples/raw/master/Tutorial.pdf>
-    for examples on how to use the
-    Créatúr framework.
-    .
-    About the name: \"Créatúr\" (pronounced kray-toor)
-    is an Irish word meaning animal, creature, or an
-    unfortunate person.
-category: AI
-author: Amy de Buitléir
+-- This file has been generated from package.yaml by hpack version 0.28.2.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: 7de3cf4c681809d20b4e6078d229f9d4ffbb38f237426e8329d1b4959077156f
+
+name:           creatur
+version:        5.9.24
+description:    Please see the README on GitHub at <https://github.com/mhwombat/creatur#readme>
+homepage:       https://github.com/mhwombat/creatur#readme
+bug-reports:    https://github.com/mhwombat/creatur/issues
+author:         Amy de Buitléir
+maintainer:     amy@nualeargais.ie
+copyright:      2018 Amy de Buitléir
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+cabal-version:  >= 1.10
+extra-source-files:
+    ChangeLog.md
+    README.md
+
+source-repository head
+  type: git
+  location: https://github.com/mhwombat/creatur
 
 library
-    exposed-modules:
-        ALife.Creatur
-        ALife.Creatur.Checklist
-        ALife.Creatur.Clock
-        ALife.Creatur.Counter
-        ALife.Creatur.Daemon
-        ALife.Creatur.Database
-        ALife.Creatur.Database.CachedFileSystem
-        ALife.Creatur.Database.CachedFileSystemInternal
-        ALife.Creatur.Database.FileSystem
-        ALife.Creatur.Genetics.Analysis
-        ALife.Creatur.Genetics.BRGCBool
-        ALife.Creatur.Genetics.BRGCWord8
-        ALife.Creatur.Genetics.BRGCWord16
-        ALife.Creatur.Genetics.Diploid
-        ALife.Creatur.Genetics.Recombination
-        ALife.Creatur.Genetics.Reproduction.Sexual
-        ALife.Creatur.Genetics.Reproduction.SimplifiedSexual
-        ALife.Creatur.Logger
-        ALife.Creatur.Logger.SimpleLogger
-        ALife.Creatur.Logger.SimpleRotatingLogger
-        ALife.Creatur.Namer
-        ALife.Creatur.Persistent
-        ALife.Creatur.Universe
-        ALife.Creatur.Task
-        ALife.Creatur.Util
-    build-depends:
-        array,
-        base,
-        binary,
-        bytestring,
-        cond,
-        cereal,
-        directory,
-        exceptions,
-        filepath,
-        gray-extended,
-        hdaemonize,
-        hsyslog,
-        MonadRandom,
-        mtl,
-        old-locale,
-        process,
-        random,
-        split,
-        time,
-        transformers,
-        unix,
-        zlib
-    hs-source-dirs: src
-    other-modules:
-        Paths_creatur
-    ghc-options: -Wall -fno-warn-orphans
+  exposed-modules:
+      ALife.Creatur
+      ALife.Creatur.Checklist
+      ALife.Creatur.Clock
+      ALife.Creatur.Counter
+      ALife.Creatur.Daemon
+      ALife.Creatur.Database
+      ALife.Creatur.Database.CachedFileSystem
+      ALife.Creatur.Database.CachedFileSystemInternal
+      ALife.Creatur.Database.FileSystem
+      ALife.Creatur.Genetics.Analysis
+      ALife.Creatur.Genetics.BRGCBool
+      ALife.Creatur.Genetics.BRGCWord16
+      ALife.Creatur.Genetics.BRGCWord8
+      ALife.Creatur.Genetics.Diploid
+      ALife.Creatur.Genetics.Recombination
+      ALife.Creatur.Genetics.Reproduction.Sexual
+      ALife.Creatur.Genetics.Reproduction.SimplifiedSexual
+      ALife.Creatur.Logger
+      ALife.Creatur.Logger.SimpleLogger
+      ALife.Creatur.Logger.SimpleRotatingLogger
+      ALife.Creatur.Namer
+      ALife.Creatur.Persistent
+      ALife.Creatur.Task
+      ALife.Creatur.Universe
+      ALife.Creatur.Util
+  other-modules:
+      Paths_creatur
+  hs-source-dirs:
+      src
+  build-depends:
+      MonadRandom
+    , array
+    , base >=4.7 && <5
+    , binary
+    , bytestring
+    , cereal
+    , cond
+    , directory
+    , exceptions
+    , filepath
+    , gray-extended
+    , hdaemonize
+    , hsyslog
+    , mtl
+    , random
+    , split
+    , time
+    , transformers
+    , unix
+  default-language: Haskell2010
 
-test-suite creatur-tests
-    type: exitcode-stdio-1.0
-    main-is: TestAll.hs
-    build-depends:
-        array,
-        base,
-        binary,
-        cereal,
-        creatur,
-        directory,
-        filepath,
-        hsyslog,
-        HUnit,
-        MonadRandom,
-        mtl,
-        temporary,
-        test-framework,
-        test-framework-hunit,
-        test-framework-quickcheck2,
-        QuickCheck
-    hs-source-dirs: test
-    other-modules:
-        ALife.Creatur.ChecklistQC
-        ALife.Creatur.CounterQC
-        ALife.Creatur.Database.CachedFileSystemQC
-        ALife.Creatur.Database.FileSystemQC
-        ALife.Creatur.Genetics.BRGCBoolQC
-        ALife.Creatur.Genetics.BRGCWord16QC
-        ALife.Creatur.Genetics.BRGCWord8QC
-        ALife.Creatur.Genetics.DiploidQC,
-        ALife.Creatur.Genetics.RecombinationQC
-        ALife.Creatur.PersistentQC
-        ALife.Creatur.UniverseQC
-        ALife.Creatur.UtilQC
-    ghc-options: -Wall
-
-
--- Benchmark creatur-bench
---   Type:             exitcode-stdio-1.0
---   Main-is:          BenchAll.hs
---   GHC-Options:      -Wall
---   Hs-source-dirs:   test
---   Build-Depends:
---                     base,
---                     creatur,
---                     criterion,
---                     test-framework
---   Other-modules:    ALife.Creatur.Genetics.BRGCWord8Bench
+test-suite creatur-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      ALife.Creatur.ChecklistQC
+      ALife.Creatur.CounterQC
+      ALife.Creatur.Database.CachedFileSystemQC
+      ALife.Creatur.Database.FileSystemQC
+      ALife.Creatur.Genetics.BRGCBoolQC
+      ALife.Creatur.Genetics.BRGCWord16QC
+      ALife.Creatur.Genetics.BRGCWord8QC
+      ALife.Creatur.Genetics.DiploidQC
+      ALife.Creatur.Genetics.RecombinationQC
+      ALife.Creatur.PersistentQC
+      ALife.Creatur.UniverseQC
+      ALife.Creatur.UtilQC
+      Paths_creatur
+  hs-source-dirs:
+      test
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      HUnit
+    , MonadRandom
+    , QuickCheck
+    , base >=4.7 && <5
+    , cereal
+    , creatur
+    , directory
+    , filepath
+    , mtl
+    , temporary
+    , test-framework
+    , test-framework-hunit
+    , test-framework-quickcheck2
+  default-language: Haskell2010

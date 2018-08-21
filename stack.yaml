@@ -2,7 +2,7 @@
 #
 # Some commonly used options have been documented as comments in this file.
 # For advanced use and comprehensive documentation of the format, please see:
-# http://docs.haskellstack.org/en/stable/yaml_configuration/
+# https://docs.haskellstack.org/en/stable/yaml_configuration/
 
 # Resolver to choose a 'specific' stackage snapshot or a compiler version.
 # A snapshot resolver dictates the compiler version and the set of packages
@@ -12,10 +12,13 @@
 # resolver: nightly-2015-09-21
 # resolver: ghc-7.10.2
 # resolver: ghcjs-0.1.0_ghc-7.10.2
-# resolver:
-#  name: custom-snapshot
-#  location: "./custom-snapshot.yaml"
-resolver: ghc-8.2.1
+#
+# The location of a snapshot can be provided as a file or url. Stack assumes
+# a snapshot provided as a file might change, whereas a url resource does not.
+#
+# resolver: ./custom-snapshot.yaml
+# resolver: https://example.com/snapshots/2018-01-01.yaml
+resolver: lts-12.7
 
 # User packages to be built.
 # Various formats can be used as shown in the example below.
@@ -27,65 +30,29 @@ resolver: ghc-8.2.1
 #    git: https://github.com/commercialhaskell/stack.git
 #    commit: e7b331f14bcffb8367cd58fbfc8b40ec7642100a
 # - location: https://github.com/commercialhaskell/stack/commit/e7b331f14bcffb8367cd58fbfc8b40ec7642100a
-#   extra-dep: true
 #  subdirs:
 #  - auto-update
 #  - wai
-#
-# A package marked 'extra-dep: true' will only be built if demanded by a
-# non-dependency (i.e. a user package), and its test suites and benchmarks
-# will not be run. This is useful for tweaking upstream packages.
 packages:
-- '.'
+- .
 # Dependency packages to be pulled from upstream that are not in the resolver
+# using the same syntax as the packages field.
 # (e.g., acme-missiles-0.3)
 extra-deps: 
-- MonadRandom-0.5.1
-- cereal-0.5.4.0
-- cond-0.4.1.1
-- exceptions-0.8.3
 - gray-extended-1.5.2
-- hdaemonize-0.5.4
-- hsyslog-5.0.1
-- mtl-2.2.1
-- old-locale-1.0.0.7
-- random-1.1
-- split-0.2.3.2
-- zlib-0.6.1.2
-- cabal-doctest-1.0.2
-- extensible-exceptions-0.1.1.4
-- fail-4.9.0.0
-- primitive-0.6.2.0
-- stm-2.4.4.1
-- transformers-compat-0.5.1.4
-- HUnit-1.6.0.0
-- QuickCheck-2.10.0.1
-- temporary-1.2.1.1
-- test-framework-0.8.1.1
-- test-framework-hunit-0.3.0.2
-- test-framework-quickcheck2-0.3.0.4
-- ansi-terminal-0.6.3.1
-- ansi-wl-pprint-0.6.8.1
-- call-stack-0.1.0
-- hostname-1.0
-- regex-posix-0.95.2
-- tf-random-0.5
-- xml-1.3.14
-- regex-base-0.93.2
-- text-1.2.2.2
 
 # Override default flag values for local packages and extra-deps
-flags: {}
+# flags: {}
 
 # Extra package databases containing global packages
-extra-package-dbs: []
+# extra-package-dbs: []
 
 # Control whether we use the GHC we find on the path
 # system-ghc: true
 #
 # Require a specific version of stack, using version ranges
 # require-stack-version: -any # Default
-# require-stack-version: ">=1.4"
+# require-stack-version: ">=1.7"
 #
 # Override the architecture used by stack, especially useful on Windows
 # arch: i386

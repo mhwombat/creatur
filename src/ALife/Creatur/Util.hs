@@ -59,13 +59,13 @@ shuffle xs = do
   let l = length xs
   rands <- take l `fmap` getRandomRs (0, l-1)
   let ar = runSTArray $ do
-      ar' <- thawSTArray $ listArray (0, l-1) xs
-      forM_ (zip [0..(l-1)] rands) $ \(i, j) -> do
-          vi <- readSTArray ar' i
-          vj <- readSTArray ar' j
-          writeSTArray ar' j vi
-          writeSTArray ar' i vj
-      return ar'
+             ar' <- thawSTArray $ listArray (0, l-1) xs
+             forM_ (zip [0..(l-1)] rands) $ \(i, j) -> do
+               vi <- readSTArray ar' i
+               vj <- readSTArray ar' j
+               writeSTArray ar' j vi
+               writeSTArray ar' i vj
+             return ar'
   return (elems ar)
 
 -- | @'safeReplaceElement' xs n x@ returns a copy of @xs@ in which the @n@th
@@ -80,7 +80,7 @@ safeReplaceElement xs i x =
 --   element has been replaced with @x@. Causes an exception if @xs@ has
 --   fewer than @n+1@ elements. Compare with @'safeReplaceElement'@.
 replaceElement :: [a] -> Int -> a -> [a]
-replaceElement xs i x = 
+replaceElement xs i x =
   if 0 <= i && i < length xs then fore ++ (x : aft) else xs
   where fore = take i xs
         aft = drop (i+1) xs
@@ -105,7 +105,7 @@ replaceElement xs i x =
 --   @'cropSquare' 3 [\'a\'..\'y\']@ returns.
 cropSquare :: Int -> [a] -> [a]
 cropSquare n xs | n <= 0     = []
-                | n < m     = 
+                | n < m     =
                     cropRect (margin, margin) (margin+n-1, margin+n-1) xs m
                 | otherwise = take (m*m) xs
   where m = (isqrt . length) xs
@@ -152,13 +152,13 @@ ilogBase n m = (floor . logBase n') m'
   where n' = fromIntegral n :: Float
         m' = fromIntegral m :: Float
 
--- | @'perfectSquare' n@ returns @True@ if @n@ is a perfect square (i.e., if 
+-- | @'perfectSquare' n@ returns @True@ if @n@ is a perfect square (i.e., if
 --   there exists an _integer_ m such that m*m = n)
 perfectSquare :: Integral a => a -> Bool
 perfectSquare n = n == m*m
   where m = isqrt n
 
--- | @n 'isPowerOf' m@ returns @True@ if @n@ is a power of m (i.e., if 
+-- | @n 'isPowerOf' m@ returns @True@ if @n@ is a power of m (i.e., if
 --   there exists an _integer_ k such that m^k = n)
 isPowerOf :: Integral a => a -> a -> Bool
 isPowerOf n m = n == m^k
@@ -180,20 +180,20 @@ fromEither     :: a -> Either e a -> a
 fromEither d x = case x of {Left _ -> d; Right v  -> v}
 
 -- | Takes a list of 'Either's and returns a list of all the 'Right'
---   values. 
+--   values.
 catEithers              :: [Either e a] -> [a]
 catEithers ls = [x | Right x <- ls]
 
 -- | Like modify, but the function that maps the old state to the
 --   new state operates in the inner monad.
 --   For example,
---   
+--
 --   > s <- get
 --   > s' = lift $ f s
 --   > put s'
---   
+--
 --   can be replaced with
---   
+--
 --   > modifyLift f
 modifyLift :: Monad m => (s -> m s) -> StateT s m ()
 modifyLift f = get >>= lift . f >>= put
@@ -203,12 +203,12 @@ modifyLift f = get >>= lift . f >>= put
 --   Similar to modifyLift, but the function being invoked doesn't
 --   have a return value, so the state is not modified.
 --   For example,
---   
+--
 --   > s <- get
 --   > s' = lift $ f s
---   
+--
 --   can be replaced with
---   
+--
 --   > getLift f
 getLift :: Monad m => (s -> m ()) -> StateT s m ()
 getLift f = get >>= lift . f >> return ()
