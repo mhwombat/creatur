@@ -2,11 +2,13 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 7de3cf4c681809d20b4e6078d229f9d4ffbb38f237426e8329d1b4959077156f
+-- hash: 048046df2d9a1e1637467cdb014536ba03c606ad0122b3f586667501ef879d37
 
 name:           creatur
-version:        5.9.24
+version:        5.9.25
+synopsis:       Framework for artificial life experiments.
 description:    Please see the README on GitHub at <https://github.com/mhwombat/creatur#readme>
+category:       AI
 homepage:       https://github.com/mhwombat/creatur#readme
 bug-reports:    https://github.com/mhwombat/creatur/issues
 author:         Amy de Buitléir

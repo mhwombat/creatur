@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------
 -- |
 -- Module      :  ALife.Creatur.Genetics.BRGCWord8
--- Copyright   :  (c) Amy de Buitléir 2013-2017
+-- Copyright   :  (c) Amy de Buitléir 2013-2018
 -- License     :  BSD-style
 -- Maintainer  :  amy@nualeargais.ie
 -- Stability   :  experimental
