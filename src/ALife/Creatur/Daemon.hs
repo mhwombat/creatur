@@ -30,7 +30,7 @@ import Control.Exception (SomeException, handle, catch)
 import Control.Monad (when)
 import Control.Monad.State (StateT, execStateT)
 import Foreign.C.String (withCStringLen)
-import System.IO (hPutStr, hPutStrLn, stderr)
+import System.IO (hPutStrLn, stderr)
 import System.IO.Unsafe (unsafePerformIO)
 import qualified System.Posix.Daemonize as D
 import System.Posix.Signals (Handler(Catch), fullSignalSet,
