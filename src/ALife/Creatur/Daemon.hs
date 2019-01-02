@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------
 -- |
 -- Module      :  ALife.Creatur.Daemon
--- Copyright   :  (c) Amy de Buitléir 2012-2018
+-- Copyright   :  (c) Amy de Buitléir 2012-2019
 -- License     :  BSD-style
 -- Maintainer  :  amy@nualeargais.ie
 -- Stability   :  experimental
@@ -11,8 +11,8 @@
 -- framework.
 --
 ------------------------------------------------------------------------
-{-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE TypeFamilies     #-}
 
 module ALife.Creatur.Daemon
   (
@@ -24,19 +24,22 @@ module ALife.Creatur.Daemon
     requestShutdown
   ) where
 
-import Control.Concurrent (MVar, newMVar, readMVar, swapMVar,
-  threadDelay)
-import Control.Exception (SomeException, handle, catch)
-import Control.Monad (when)
-import Control.Monad.State (StateT, execStateT)
-import Foreign.C.String (withCStringLen)
-import System.IO (hPutStrLn, stderr)
-import System.IO.Unsafe (unsafePerformIO)
+import           Control.Concurrent
+    (MVar, newMVar, readMVar, swapMVar, threadDelay)
+import           Control.Exception      (SomeException, catch, handle)
+import           Control.Monad          (when)
+import           Control.Monad.State    (StateT, execStateT)
+import           Foreign.C.String       (withCStringLen)
+import           System.IO              (hPutStrLn, stderr)
+import           System.IO.Unsafe       (unsafePerformIO)
 import qualified System.Posix.Daemonize as D
-import System.Posix.Signals (Handler(Catch), fullSignalSet,
-  installHandler, sigTERM)
-import System.Posix.Syslog (Priority(Warning), Facility(Daemon), syslog)
-import System.Posix.User (getLoginName, getRealUserID)
+import           System.Posix.Signals
+    (Handler (Catch), fullSignalSet, installHandler, sigTERM)
+import           System.Posix.Syslog
+    (Facility (Daemon), Priority (Warning), syslog)
+import           System.Posix.User
+    (getGroupEntryForID, getLoginName, getRealGroupID, getRealUserID,
+    groupName)
 
 termReceived :: MVar Bool
 termReceived = unsafePerformIO (newMVar False)
@@ -45,21 +48,21 @@ termReceived = unsafePerformIO (newMVar False)
 data Job s = Job
   {
     -- | Operations to perform on startup.
-    onStartup :: s -> IO s,
+    onStartup   :: s -> IO s,
     -- | Operations to perform on shutdown.
-    onShutdown :: s -> IO (),
+    onShutdown  :: s -> IO (),
     -- | Operations to perform if an exception occurs.
     onException :: s -> SomeException -> IO s,
     -- | Operations to perform repeatedly while running.
-    task :: StateT s IO (),
+    task        :: StateT s IO (),
     -- | Number of microseconds to sleep between invocations of @'task'@.
-    sleepTime :: Int
+    sleepTime   :: Int
   }
 
 data CreaturDaemon p s = CreaturDaemon
   {
     daemon :: D.CreateDaemon p,
-    job :: Job s
+    job    :: Job s
   }
 
 -- | Creates a simple daemon to run a job. The daemon will run under
@@ -80,7 +83,9 @@ launch d = do
     then putStrLn "Must run as root"
     else do
       u <- defaultToLoginName (D.user . daemon $ d)
-      g <- defaultToLoginName (D.user . daemon $ d)
+      g <- defaultToGroupName (D.user . daemon $ d)
+      putStrLn $ "Launching daemon as user " ++ show u
+                   ++ ", group " ++ show g
       let d' = (daemon d) { D.user = u, D.group = g }
       catch (D.serviced d') handleLaunchError
 
@@ -98,7 +103,14 @@ launchInteractive j s = do
 
 defaultToLoginName :: Maybe String -> IO (Maybe String)
 defaultToLoginName (Just "") = fmap Just getLoginName
-defaultToLoginName x = return x
+defaultToLoginName x         = return x
+
+defaultToGroupName :: Maybe String -> IO (Maybe String)
+defaultToGroupName (Just "") = fmap Just getGroupName
+defaultToGroupName x         = return x
+
+getGroupName :: IO String
+getGroupName = fmap groupName $ getRealGroupID >>= getGroupEntryForID
 
 daemonMain :: Job s -> s -> () -> IO ()
 daemonMain t s _ = do

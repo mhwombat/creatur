@@ -1,0 +1,11 @@
+# Build artifacts
+.stack-work
+result
+dist
+
+# Backup files
+*~
+
+# Stuff that I'm not ready to publish
+notes
+unpublished
