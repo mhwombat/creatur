@@ -45,7 +45,7 @@ library
       MonadRandom >= 0.5.1 && < 0.6
     , array >= 0.5.2 && < 0.6
     , base >=4.7 && <5
-    , binary ==0.8.*
+    , binary >=0.8 && <0.11
     , bytestring >= 0.10.8 && < 0.11
     , cereal >= 0.5.7 && < 0.6
     , cond >= 0.4.1 && < 0.5
@@ -58,7 +58,7 @@ library
     , mtl >= 2.2.2 && < 2.3
     , random >= 1.1 && < 1.2
     , split >= 0.2.3 && < 0.3
-    , time ==1.8.*
+    , time >=1.8 && < 1.10
     , transformers >= 0.5.5 && < 0.6
     , unix >= 2.7.2 && < 2.8
   other-modules:       Paths_creatur

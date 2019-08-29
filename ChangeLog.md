@@ -1,6 +1,7 @@
 # Changelog for creatur
 
 5.9.30 Automatically archive agents that trigger errors.
+       Support newer versions of binary, time.
 
 5.9.29 Report user and group when launching daemon.
 
