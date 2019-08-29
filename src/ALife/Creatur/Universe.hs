@@ -10,7 +10,10 @@
 -- Provides a habitat for artificial life.
 --
 ------------------------------------------------------------------------
-{-# LANGUAGE TypeFamilies, FlexibleContexts, FlexibleInstances, ScopedTypeVariables #-}
+{-# LANGUAGE FlexibleContexts    #-}
+{-# LANGUAGE FlexibleInstances   #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeFamilies        #-}
 module ALife.Creatur.Universe
   (
     -- * Constructors
@@ -49,24 +52,28 @@ module ALife.Creatur.Universe
     markDone
  ) where
 
-import Prelude hiding (lookup)
+import           Prelude                                 hiding (lookup)
 
-import qualified ALife.Creatur as A
-import qualified ALife.Creatur.Namer as N
-import qualified ALife.Creatur.Checklist as CL
-import qualified ALife.Creatur.Clock as C
-import qualified ALife.Creatur.Counter as K
-import qualified ALife.Creatur.Database as D
-import qualified ALife.Creatur.Database.FileSystem as FS
+import qualified ALife.Creatur                           as A
+import qualified ALife.Creatur.Checklist                 as CL
+import qualified ALife.Creatur.Clock                     as C
+import qualified ALife.Creatur.Counter                   as K
+import qualified ALife.Creatur.Database                  as D
 import qualified ALife.Creatur.Database.CachedFileSystem as CFS
-import qualified ALife.Creatur.Logger as L
-import qualified ALife.Creatur.Logger.SimpleLogger as SL
-import ALife.Creatur.Util (stateMap, shuffle)
-import Control.Monad.IO.Class (liftIO)
-import Control.Monad.Random (evalRandIO)
-import Control.Monad.State (StateT, get)
-import Data.Either (partitionEithers)
-import Data.Serialize (Serialize)
+import qualified ALife.Creatur.Database.FileSystem       as FS
+import qualified ALife.Creatur.Logger                    as L
+import qualified ALife.Creatur.Logger.SimpleLogger       as SL
+import qualified ALife.Creatur.Namer                     as N
+import           ALife.Creatur.Util                      (shuffle, stateMap)
+import           Control.Exception                       (SomeException)
+import           Control.Monad.Catch                     (catchAll)
+import           Control.Monad.IO.Class                  (liftIO)
+import           Control.Monad.Random                    (evalRandIO)
+import           Control.Monad.State                     (StateT, get)
+import           Data.Either                             (partitionEithers)
+import           Data.Serialize                          (Serialize)
+import           GHC.Stack
+    (callStack, prettyCallStack)
 
 -- | A habitat containing artificial life.
 class (C.Clock (Clock u), L.Logger (Logger u), D.Database (AgentDB u),
@@ -233,7 +240,7 @@ withAgent program name = do
     Left msg ->
       writeToLog $ "Unable to read '" ++ name ++ "': " ++ msg
     Right a ->
-      program a >>= store
+      catchAll (program a >>= store) (handleException . A.agentId $ a)
 
 -- | A program involving multiple agents.
 --   The input parameter is a list of agents.
@@ -245,7 +252,18 @@ type AgentsProgram u = [Agent u] -> StateT u IO [Agent u]
 withAgents
   :: (Universe u, Serialize (Agent u))
     => AgentsProgram u -> [A.AgentId] -> StateT u IO ()
-withAgents program names = getAgents names >>= program >>= mapM_ store
+withAgents program names = do
+  as <- getAgents names
+  catchAll (program as >>= mapM_ store)
+      (handleException . A.agentId  . head $ as)
+
+handleException
+  :: (Universe u, Serialize (Agent u))
+    => A.AgentId -> SomeException -> StateT u IO ()
+handleException a e = do
+  writeToLog $ "WARNING: Unhandled exception: " ++ show e
+  writeToLog $ "WARNING: Call stack: " ++ prettyCallStack callStack
+  archive a
 
 -- | Returns the current lineup of (living) agents in the universe.
 --   Note: Check for @'endOfRound'@ and call @'refreshLineup'@ if needed
@@ -283,10 +301,10 @@ shuffledAgentIds
 
 data SimpleUniverse a = SimpleUniverse
   {
-    suClock :: K.PersistentCounter,
-    suLogger :: SL.SimpleLogger,
-    suDB :: FS.FSDatabase a,
-    suNamer :: N.SimpleNamer,
+    suClock     :: K.PersistentCounter,
+    suLogger    :: SL.SimpleLogger,
+    suDB        :: FS.FSDatabase a,
+    suNamer     :: N.SimpleNamer,
     suChecklist :: CL.PersistentChecklist
   } deriving (Show, Eq)
 
@@ -319,10 +337,10 @@ mkSimpleUniverse name dir
 
 data CachedUniverse a = CachedUniverse
   {
-    cuClock :: K.PersistentCounter,
-    cuLogger :: SL.SimpleLogger,
-    cuDB :: CFS.CachedFSDatabase a,
-    cuNamer :: N.SimpleNamer,
+    cuClock     :: K.PersistentCounter,
+    cuLogger    :: SL.SimpleLogger,
+    cuDB        :: CFS.CachedFSDatabase a,
+    cuNamer     :: N.SimpleNamer,
     cuChecklist :: CL.PersistentChecklist
   } deriving (Show, Eq)
 

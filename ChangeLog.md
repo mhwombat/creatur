@@ -1,5 +1,7 @@
 # Changelog for creatur
 
+5.9.30 Automatically archive agents that trigger errors.
+
 5.9.29 Report user and group when launching daemon.
 
 5.9.28 Upgraded to work with NixOS + cabal-install.
