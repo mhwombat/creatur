@@ -1,0 +1,51 @@
+import ALife.Creatur.Genetics.BRGCBool
+import Data.Word
+import GHC.Generics (Generic)
+import Codec.Gray
+import ALife.Creatur.Genetics.Analysis
+
+λ> length . ALife.Creatur.Genetics.BRGCBool.write $ True
+1 Bool = 1 bit
+
+λ> length . ALife.Creatur.Genetics.BRGCWord8.write $ True
+1 Word8 = 8 bits
+
+λ> length . ALife.Creatur.Genetics.BRGCWord16.write $ True
+1 Word16 = 16 bits
+
+
+λ> length . ALife.Creatur.Genetics.BRGCBool.write $ (1 :: Word8)
+8 Bool = 8 bits
+
+λ> length . ALife.Creatur.Genetics.BRGCWord8.write $ (1 :: Word8)
+1 Word8 = 8 bits
+
+λ> length . ALife.Creatur.Genetics.BRGCWord16.write $ (1 :: Word8)
+1 Word16 = 16 bits
+
+
+λ> length . ALife.Creatur.Genetics.BRGCBool.write $ (1 :: Word16)
+16 Bool = 16 bits
+
+λ> length . ALife.Creatur.Genetics.BRGCWord8.write $ (1 :: Word16)
+2 Word8s = 16 bits
+
+λ> length . ALife.Creatur.Genetics.BRGCWord16.write $ (1 :: Word16)
+1 Word16 = 16 bits
+
+
+
+grayToIntegral 255 = 170
+grayToIntegral 65535 = 43690
+
+λ> length . ALife.Creatur.Genetics.BRGCBool.write $ (replicate 10 170 :: [Word8])
+91 Bool = 91 bits
+
+λ> length . ALife.Creatur.Genetics.BRGCWord8.write $ (replicate 10 170 :: [Word8])
+12 Word8s = 96 bits
+
+λ> length . ALife.Creatur.Genetics.BRGCWord16.write $ (replicate 10 170 :: [Word8])
+21 Word16s = 336 bits
+
+
+

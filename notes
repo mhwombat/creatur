@@ -1,0 +1,7 @@
+:l ALife.Creatur.Genetics.BRGCWord8QC
+g = -1 :: Int
+x = write g
+g' = read x :: Either [String] Int
+
+runReader get x :: (Either [String] Int, [String])
+(Right 0,["2: read 8 list length","3: read 0 Word8","4: read 0 Word8","5: read 0 Word8","6: read 0 Word8","7: read 0 Word8","8: read 0 Word8","9: read 0 Word8","10: read 0 Word8"])
