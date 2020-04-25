@@ -18,6 +18,8 @@ mkDerivation {
     temporary test-framework test-framework-hunit
     test-framework-quickcheck2
   ];
+  enableLibraryProfiling = true;
+  enableExecutableProfiling = true;
   homepage = "https://github.com/mhwombat/creatur";
   description = "Framework for artificial life experiments";
   license = stdenv.lib.licenses.bsd3;
