@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------
 -- |
 -- Module      :  ALife.Creatur.Genetics.BRGCWord8
--- Copyright   :  (c) Amy de Buitléir 2013-2019
+-- Copyright   :  (c) 2013-2021 Amy de Buitléir
 -- License     :  BSD-style
 -- Maintainer  :  amy@nualeargais.ie
 -- Stability   :  experimental
@@ -24,7 +24,6 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE DefaultSignatures #-}
 {-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE NoMonadFailDesugaring #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE CPP #-}
@@ -166,7 +165,7 @@ convertLR (x:[]) = if even x -- Only care about the last bit
                      then Right (L, "L1")
                      else Right (R, "R1")
 convertLR _ = Left "logic error"
-  
+
 -- | Sums: encode choice between constructors
 instance (GGenetic a) => GGenetic (M1 i c a) where
   gput (M1 x) = gput x
@@ -300,7 +299,7 @@ integralToBytes n x = f n x []
         f m y bs = f (m-1) y' (b:bs)
           where y' = y `div` 0x100
                 b = fromIntegral $ y `mod` 0x100
- 
+
 bytesToIntegral :: Integral t => [Word8] -> t
 bytesToIntegral bs = f (bs, 0)
   where f ([], n) = n
@@ -325,7 +324,7 @@ getList n = do
   if null mss
     then return $ Right xs
     else return $ Left (head mss)
- 
+
 -- | Write a Word8 value to the genome without encoding it
 putRawWord8 :: Word8 -> Writer ()
 putRawWord8 x = do
@@ -357,16 +356,16 @@ reportW desc = do
   (xs, msgs) <- S.get
   let msg = show (length xs) ++ ": wrote " ++ desc
   S.put (xs, msg:msgs)
-  
+
 putAndReport :: [Word8] -> String -> Writer ()
 putAndReport bytes msg = putRawWord8s bytes >> reportW msg
 
 replaceReportW :: String -> Writer ()
 replaceReportW desc = do
-  (xs, _:msgs) <- S.get
+  ~(xs, _:msgs) <- S.get
   let msg = show (length xs) ++ ": wrote " ++ desc
   S.put (xs, msg:msgs)
-  
+
 reportR :: String -> Reader ()
 reportR desc = do
   (xs, i, msgs) <- S.get
@@ -384,10 +383,10 @@ getAndReport n parse = do
 
 replaceReportR :: String -> Reader ()
 replaceReportR desc = do
-  (xs, i, _:msgs) <- S.get
+  ~(xs, i, _:msgs) <- S.get
   let msg = show i ++ ": read " ++ desc
   S.put (xs, i, msg:msgs)
-  
+
 --
 -- Diploid genes
 --
