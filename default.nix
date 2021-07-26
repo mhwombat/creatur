@@ -3,4 +3,8 @@ let
 in 
   pkgs.haskellPackages.developPackage {
     root = ./.;
+    source-overrides = {
+      gray-extended = ../gray-extended;
+      som = ../som;
+    };
   }
