@@ -5,6 +5,5 @@ in
     root = ./.;
     source-overrides = {
       gray-extended = ../gray-extended;
-      som = ../som;
     };
   }
