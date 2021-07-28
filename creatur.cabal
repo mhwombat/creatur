@@ -25,7 +25,7 @@ common common-stuff
 
 library
   import:          common-stuff
-  hs-source-dirs:   src
+  hs-source-dirs:  src
   exposed-modules:
     ALife.Creatur
     ALife.Creatur.Checklist
@@ -52,9 +52,9 @@ library
     ALife.Creatur.Task
     ALife.Creatur.Universe
     ALife.Creatur.Util
-  other-modules:    Paths_creatur
-  autogen-modules:  Paths_creatur
-  ghc-options:      -Wall -Wunused-packages
+  other-modules:   Paths_creatur
+  autogen-modules: Paths_creatur
+  ghc-options:     -Wall -Wunused-packages
   build-depends:
     , array          ^>=0.5.2
     , base           >=4.7    && <5
@@ -77,10 +77,10 @@ library
     , unix           ^>=2.7.2
 
 test-suite creatur-test
-  import:          common-stuff
-  type:             exitcode-stdio-1.0
-  hs-source-dirs:   test
-  main-is:          Spec.hs
+  import:         common-stuff
+  type:           exitcode-stdio-1.0
+  hs-source-dirs: test
+  main-is:        Spec.hs
   other-modules:
     ALife.Creatur.ChecklistQC
     ALife.Creatur.CounterQC
