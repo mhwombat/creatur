@@ -1,5 +1,7 @@
 # Changelog for creatur
 
+5.9.31 Support cloning.
+
 5.9.30 Automatically archive agents that trigger errors.
        Support newer versions of binary, time.
 

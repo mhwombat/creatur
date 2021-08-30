@@ -1,7 +1,7 @@
 cabal-version:      2.4
 synopsis:           Framework for artificial life experiments.
 name:               creatur
-version:            5.9.30
+version:            5.9.31
 description:
   Please see the README on GitHub at <https://github.com/mhwombat/creatur#readme>
 homepage:           https://github.com/mhwombat/creatur
