@@ -10,8 +10,6 @@
 -- QuickCheck tests.
 --
 ------------------------------------------------------------------------
-{-# LANGUAGE DeriveGeneric #-}
-
 module ALife.Creatur.CounterQC
   (
     test

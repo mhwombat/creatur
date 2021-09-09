@@ -23,7 +23,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE DefaultSignatures #-}
-{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE CPP #-}
 module ALife.Creatur.Genetics.BRGCBool
@@ -112,8 +111,7 @@ class Genetic g where
 
   default get :: (Generic g, GGenetic (Rep g)) => Reader (Either [String] g)
   get = do
-    a <- gget
-    return $ fmap to a
+    fmap to <$> gget
 
   getWithDefault :: g -> Reader g
   getWithDefault d = fmap (fromEither d) get
@@ -162,8 +160,7 @@ instance (GGenetic a) => GGenetic (M1 i c a) where
 instance (Genetic a) => GGenetic (K1 i a) where
   gput (K1 x) = put x
   gget = do
-    a <- get
-    return $ fmap K1 a
+    fmap K1 <$> get
 
 --
 -- Instances
@@ -185,11 +182,10 @@ instance Genetic Bool where
 
 instance Genetic Char where
   put c = do
-    let bs = map (\b -> b == '1') $ showIntAtBase 2 intToDigit (ord c) ""
+    let bs = map (== '1') $ showIntAtBase 2 intToDigit (ord c) ""
     put bs
   get = do
-    bs <- get
-    return . fmap chr $ fmap boolsToInt bs
+    fmap (chr . boolsToInt) <$> get
 
 instance Genetic Word8 where
   put = putRawBoolArray . intToBools 8 . integralToGray
@@ -223,7 +219,7 @@ getRawBoolArray n = do
 
 intToBools :: (Integral a, Show a) => Int -> a -> [Bool]
 intToBools nBits x =
-  map (\b -> b == '1') . tail $ showIntAtBase 2 intToDigit x' ""
+  map (== '1') . tail $ showIntAtBase 2 intToDigit x' ""
   where x' = 2^nBits + fromIntegral x :: Int
 
 boolsToInt :: Integral a => [Bool] -> a
@@ -285,4 +281,4 @@ expressEither (Right a) (Right b) = Right (express a b)
 expressEither (Right a) (Left _)  = Right a
 expressEither (Left _)  (Right b) = Right b
 expressEither (Left xs) (Left ys) =
-  Left $ (map ("sequence 1: " ++) xs) ++ (map ("sequence 2: " ++) ys)
+  Left $ map ("sequence 1: " ++) xs ++ map ("sequence 2: " ++) ys

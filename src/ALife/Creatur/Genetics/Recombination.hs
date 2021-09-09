@@ -7,7 +7,7 @@
 -- Stability   :  experimental
 -- Portability :  portable
 --
--- Provides a mechanism to break apart and rejoin sequences of data. 
+-- Provides a mechanism to break apart and rejoin sequences of data.
 -- Inspired by DNA recombination in biology, this technique can be used
 -- to recombine \"genetic\" instructions for building artificial life.
 --
@@ -32,7 +32,7 @@ import System.Random (Random)
 import Control.Exception.Base (assert)
 import Control.Monad.Random (Rand, RandomGen, getRandom, getRandomR)
 
--- | Cuts two lists at the specified locations, swaps the ends, and 
+-- | Cuts two lists at the specified locations, swaps the ends, and
 --   splices them. The resulting lists will be:
 --   @
 --     a[0..n-1] ++ b[m..]
@@ -75,12 +75,12 @@ randomCutAndSplice (as, bs) = do
     m <- getRandomR (0,length bs - 1)
     return (cutAndSplice n m (as, bs))
 
--- | Cuts two lists at the specified location, swaps the ends, and 
+-- | Cuts two lists at the specified location, swaps the ends, and
 --   splices them. This is a variation of 'cutAndSplice' where n == m.
 crossover :: Int -> ([a], [a]) -> ([a], [a])
 crossover n = cutAndSplice n n
 
--- | Same as @'crossover'@, except that the location is chosen at 
+-- | Same as @'crossover'@, except that the location is chosen at
 --   random.
 randomCrossover :: RandomGen g => ([a], [a]) -> Rand g ([a], [a])
 randomCrossover (as, bs) = do
@@ -91,15 +91,14 @@ randomCrossover (as, bs) = do
 mutateList :: (Random n, RandomGen g) => [n] -> Rand g [n]
 mutateList xs = do
   (i, _) <- randomListSelection xs
-  x <- getRandom
-  return (safeReplaceElement xs i x)
+  safeReplaceElement xs i x <$> getRandom
 
 -- | Mutates a random element in one list in a pair.
-mutatePairedLists :: 
+mutatePairedLists ::
   (Random n, RandomGen g) => ([n], [n]) -> Rand g ([n], [n])
 mutatePairedLists (xs,ys) = do
   chooseFst <- weightedRandomBoolean 0.5
-  if chooseFst 
+  if chooseFst
     then do
       xs' <- mutateList xs
       return (xs', ys)
@@ -118,7 +117,7 @@ withProbability p op genes = do
 repeatWithProbability :: RandomGen g => Double -> (b -> Rand g b) -> b -> Rand g b
 repeatWithProbability p op genes = do
   doOp <- weightedRandomBoolean p
-  if doOp 
+  if doOp
     then do
       genes' <- op genes
       repeatWithProbability p op genes'
@@ -133,7 +132,7 @@ repeatWithProbability p op genes = do
 -- evalRandIO (withProbability 0.5 randomCrossover g >>= withProbability 0.05 randomCutAndSplice >>= withProbability 0.5 mutatePairedLists >>= randomOneOfPair)
 
 
--- | Randomly select a boolean, but weighted to return True with probability 
+-- | Randomly select a boolean, but weighted to return True with probability
 --   p.
 weightedRandomBoolean :: RandomGen g => Double -> Rand g Bool
 weightedRandomBoolean p = do
@@ -143,7 +142,7 @@ weightedRandomBoolean p = do
 randomOneOfPair :: RandomGen g => (a, a) -> Rand g a
 randomOneOfPair pair = do
   chooseFst <- weightedRandomBoolean 0.5
-  if chooseFst 
+  if chooseFst
     then return $ fst pair
     else return $ snd pair
 
@@ -164,7 +163,7 @@ randomOneOfList xs = do
 --  p <- getRandomR (0.0,s)
 --  return (fst (head (dropWhile (\(_,q) -> q < p) cs)))
 
--- | Choose an element at random from a list and return the element and its 
+-- | Choose an element at random from a list and return the element and its
 --   index
 randomListSelection :: RandomGen g => [a] -> Rand g (Int, a)
 randomListSelection xs = assert (not . null $ xs) $ do

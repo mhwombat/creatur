@@ -10,7 +10,7 @@
 -- A simple task list which persists between runs.
 --
 ------------------------------------------------------------------------
-{-# LANGUAGE TypeSynonymInstances, FlexibleInstances #-}
+{-# LANGUAGE FlexibleInstances #-}
 module ALife.Creatur.Checklist
   (
     Checklist(..),

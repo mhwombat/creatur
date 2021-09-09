@@ -10,7 +10,7 @@
 -- Benchmarks.
 --
 ------------------------------------------------------------------------
-{-# LANGUAGE DeriveGeneric, FlexibleInstances #-}
+{-# LANGUAGE FlexibleInstances #-}
 module ALife.Creatur.Genetics.BRGCBoolBench
   (
     benchmark
@@ -26,7 +26,7 @@ word8 = 0
 
 word8Encoded :: [Bool]
 word8Encoded = write word8
-                
+
 putWord8Benchmark :: Pure
 putWord8Benchmark = nf write word8
 

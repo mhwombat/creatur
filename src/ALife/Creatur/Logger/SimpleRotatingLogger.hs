@@ -7,7 +7,7 @@
 -- Stability   :  experimental
 -- Portability :  portable
 --
--- A simple rotating log, tailored to the needs of the Créatúr 
+-- A simple rotating log, tailored to the needs of the Créatúr
 -- framework.
 --
 ------------------------------------------------------------------------
@@ -42,7 +42,7 @@ data SimpleRotatingLogger = SimpleRotatingLogger {
 
 -- | @'mkSimpleRotatingLogger' d prefix n@ creates a logger that will write to
 --   directory @d@. The log \"rotates\" (starts a new log file) every @n@
---   records. Log files follow the naming convention @prefix@./k/, where /k/ 
+--   records. Log files follow the naming convention @prefix@./k/, where /k/
 --   is the number of the last log record contained in the file. If logging
 --   has already been set up in @directory@, then logging will continue where
 --   it left off; appending to the most recent log file.
@@ -77,13 +77,13 @@ debug :: String -> StateT SimpleRotatingLogger IO ()
 debug s = do
   n <- gets recordCount
   k <- gets logCount
-  getLift . write' $ "DEBUG " ++ s ++ ": n=" ++ show n ++ ": k=" ++ show k 
+  getLift . write' $ "DEBUG " ++ s ++ ": n=" ++ show n ++ ": k=" ++ show k
   fExp <- gets expFilename
   whenM (liftIO $ doesFileExist fExp) $ do
     s' <- liftIO $ readFile fExp
     let (n',k') = read s' :: (Int,Int)
-    getLift . write' $ "DEBUG2 " ++ s ++ ": n'=" ++ show n' ++ ": k'=" ++ show k' 
-  
+    getLift . write' $ "DEBUG2 " ++ s ++ ": n'=" ++ show n' ++ ": k'=" ++ show k'
+
 readState :: StateT SimpleRotatingLogger IO ()
 readState = do
   fExp <- gets expFilename
@@ -111,8 +111,8 @@ rotateLogIfNeeded = do
   debug "rotateLogIfNeeded"
   n <- gets recordCount
   m <- gets maxRecordsPerFile
-  when (n >= m) $ rotateLog
-  
+  when (n >= m) rotateLog
+
 rotateLog :: StateT SimpleRotatingLogger IO ()
 rotateLog = do
   debug "rotateLog"

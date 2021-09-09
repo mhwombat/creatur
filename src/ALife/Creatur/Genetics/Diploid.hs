@@ -11,7 +11,7 @@
 --
 ------------------------------------------------------------------------
 {-# LANGUAGE TypeFamilies, FlexibleContexts, FlexibleInstances,
-    DefaultSignatures, DeriveGeneric, TypeOperators #-}
+    DefaultSignatures, TypeOperators #-}
 module ALife.Creatur.Genetics.Diploid
   (
     Diploid(..),
@@ -47,7 +47,7 @@ instance GDiploid U1 where
 
 -- | Constants, additional parameters and recursion of kind *
 instance (GDiploid a, GDiploid b) => GDiploid (a :*: b) where
-  gexpress (a :*: b) (c :*: d) = (gexpress a c) :*: (gexpress b d)
+  gexpress (a :*: b) (c :*: d) = gexpress a c :*: gexpress b d
 
 -- | Meta-information (constructor names, etc.)
 instance (GDiploid a, GDiploid b) => GDiploid (a :+: b) where
@@ -98,149 +98,149 @@ instance (Diploid a) => Diploid (Maybe a)
 instance (Diploid a, Diploid b) => Diploid (a, b)
 
 -- TODO: Types I might want to define instances for
--- Bool	 
--- Char	 
--- Double	 
--- Float	 
--- Int	 
--- Int8	 
--- Int16	 
--- Int32	 
--- Int64	 
--- Integer	 
--- Ordering	 
--- Word	 
--- Word8	 
--- Word16	 
--- Word32	 
--- Word64	 
--- ()	 
--- TyCon	 
--- TypeRep	 
--- ArithException	 
--- ErrorCall	 
--- SomeException	 
--- IOException	 
--- MaskingState	 
--- Lexeme	 
--- IOMode	 
--- SeekMode	 
--- CUIntMax	 
--- CIntMax	 
--- CUIntPtr	 
--- CIntPtr	 
--- CSUSeconds	 
--- CUSeconds	 
--- CTime	 
--- CClock	 
--- CSigAtomic	 
--- CWchar	 
--- CSize	 
--- CPtrdiff	 
--- CDouble	 
--- CFloat	 
--- CULLong	 
--- CLLong	 
--- CULong	 
--- CLong	 
--- CUInt	 
--- CInt	 
--- CUShort	 
--- CShort	 
--- CUChar	 
--- CSChar	 
--- CChar	 
--- GeneralCategory	 
--- Associativity	 
--- Fixity	 
--- Arity	 
--- Dynamic	 
--- IntPtr	 
--- WordPtr	 
--- Any	 
--- All	 
--- CodingProgress	 
--- TextEncoding	 
--- NewlineMode	 
--- Newline	 
--- BufferMode	 
--- Handle	 
--- IOErrorType	 
--- ExitCode	 
--- ArrayException	 
--- AsyncException	 
--- AssertionFailed	 
--- Deadlock	 
--- BlockedIndefinitelyOnSTM	 
--- BlockedIndefinitelyOnMVar	 
--- CodingFailureMode	 
--- ThreadStatus	 
--- BlockReason	 
--- ThreadId	 
--- NestedAtomically	 
--- NonTermination	 
--- NoMethodError	 
--- RecUpdError	 
--- RecConError	 
--- RecSelError	 
--- PatternMatchFail	 
--- Fd	 
--- CRLim	 
--- CTcflag	 
--- CSpeed	 
--- CCc	 
--- CUid	 
--- CNlink	 
--- CGid	 
--- CSsize	 
--- CPid	 
--- COff	 
--- CMode	 
--- CIno	 
--- CDev	 
--- Event	 
--- FdKey	 
--- HandlePosn	 
--- Fixity	 
--- ConstrRep	 
--- DataRep	 
--- Constr	 
--- DataType	 
--- GCStats	 
--- Version	 
--- a => Diploid [a]	 
--- (Integral a, Diploid a) => Diploid (Ratio a)	 
--- (Ptr a)	 
--- (FunPtr a)	 
--- a => Diploid (Maybe a)	 
--- (ForeignPtr a)	 
--- (IsEven n)	 
--- (IsZero n)	 
--- a => Diploid (Last a)	 
--- a => Diploid (First a)	 
--- a => Diploid (Product a)	 
--- a => Diploid (Sum a)	 
--- a => Diploid (Dual a)	 
--- a => Diploid (Complex a)	 
--- HasResolution a => Diploid (Fixed a)	 
--- (a -> b)	 
--- (Diploid a, Diploid b) => Diploid (Either a b)	 
--- (Diploid a, Diploid b) => Diploid (a, b)	 
--- (ST s a)	 
--- (SingE k (Kind k) rep, Diploid rep) => Diploid (Sing k a)	 
--- (Diploid a, Diploid b, Diploid c) => Diploid (a, b, c)	 
--- (Diploid a, Diploid b, Diploid c, Diploid d) => Diploid (a, b, c, d)	 
--- (Diploid a, Diploid b, Diploid c, Diploid d, Diploid e) => Diploid (a, b, c, d, e)	 
--- (Diploid a, Diploid b, Diploid c, Diploid d, Diploid e, Diploid f) => Diploid (a, b, c, d, e, f)	 
--- (Diploid a, Diploid b, Diploid c, Diploid d, Diploid e, Diploid f, Diploid g) => Diploid (a, b, c, d, e, f, g)	 
--- (Diploid a, Diploid b, Diploid c, Diploid d, Diploid e, Diploid f, Diploid g, Diploid h) => Diploid (a, b, c, d, e, f, g, h)	 
--- (Diploid a, Diploid b, Diploid c, Diploid d, Diploid e, Diploid f, Diploid g, Diploid h, Diploid i) => Diploid (a, b, c, d, e, f, g, h, i)	 
--- (Diploid a, Diploid b, Diploid c, Diploid d, Diploid e, Diploid f, Diploid g, Diploid h, Diploid i, Diploid j) => Diploid (a, b, c, d, e, f, g, h, i, j)	 
--- (Diploid a, Diploid b, Diploid c, Diploid d, Diploid e, Diploid f, Diploid g, Diploid h, Diploid i, Diploid j, Diploid k) => Diploid (a, b, c, d, e, f, g, h, i, j, k)	 
--- (Diploid a, Diploid b, Diploid c, Diploid d, Diploid e, Diploid f, Diploid g, Diploid h, Diploid i, Diploid j, Diploid k, Diploid l) => Diploid (a, b, c, d, e, f, g, h, i, j, k, l)	 
--- (Diploid a, Diploid b, Diploid c, Diploid d, Diploid e, Diploid f, Diploid g, Diploid h, Diploid i, Diploid j, Diploid k, Diploid l, Diploid m) => Diploid (a, b, c, d, e, f, g, h, i, j, k, l, m)	 
--- (Diploid a, Diploid b, Diploid c, Diploid d, Diploid e, Diploid f, Diploid g, Diploid h, Diploid i, Diploid j, Diploid k, Diploid l, Diploid m, Diploid n) => Diploid (a, b, c, d, e, f, g, h, i, j, k, l, m, n)	 
--- (Diploid a, Diploid b, Diploid c, Diploid d, Diploid e, Diploid f, Diploid g, Diploid h, Diploid i, Diploid j, Diploid k, Diploid l, Diploid m, Diploid n, Diploid o) => Diploid (a, b, c, d, e, f, g, h, i, j, k, l, m, n, o)	 
+-- Bool
+-- Char
+-- Double
+-- Float
+-- Int
+-- Int8
+-- Int16
+-- Int32
+-- Int64
+-- Integer
+-- Ordering
+-- Word
+-- Word8
+-- Word16
+-- Word32
+-- Word64
+-- ()
+-- TyCon
+-- TypeRep
+-- ArithException
+-- ErrorCall
+-- SomeException
+-- IOException
+-- MaskingState
+-- Lexeme
+-- IOMode
+-- SeekMode
+-- CUIntMax
+-- CIntMax
+-- CUIntPtr
+-- CIntPtr
+-- CSUSeconds
+-- CUSeconds
+-- CTime
+-- CClock
+-- CSigAtomic
+-- CWchar
+-- CSize
+-- CPtrdiff
+-- CDouble
+-- CFloat
+-- CULLong
+-- CLLong
+-- CULong
+-- CLong
+-- CUInt
+-- CInt
+-- CUShort
+-- CShort
+-- CUChar
+-- CSChar
+-- CChar
+-- GeneralCategory
+-- Associativity
+-- Fixity
+-- Arity
+-- Dynamic
+-- IntPtr
+-- WordPtr
+-- Any
+-- All
+-- CodingProgress
+-- TextEncoding
+-- NewlineMode
+-- Newline
+-- BufferMode
+-- Handle
+-- IOErrorType
+-- ExitCode
+-- ArrayException
+-- AsyncException
+-- AssertionFailed
+-- Deadlock
+-- BlockedIndefinitelyOnSTM
+-- BlockedIndefinitelyOnMVar
+-- CodingFailureMode
+-- ThreadStatus
+-- BlockReason
+-- ThreadId
+-- NestedAtomically
+-- NonTermination
+-- NoMethodError
+-- RecUpdError
+-- RecConError
+-- RecSelError
+-- PatternMatchFail
+-- Fd
+-- CRLim
+-- CTcflag
+-- CSpeed
+-- CCc
+-- CUid
+-- CNlink
+-- CGid
+-- CSsize
+-- CPid
+-- COff
+-- CMode
+-- CIno
+-- CDev
+-- Event
+-- FdKey
+-- HandlePosn
+-- Fixity
+-- ConstrRep
+-- DataRep
+-- Constr
+-- DataType
+-- GCStats
+-- Version
+-- a => Diploid [a]
+-- (Integral a, Diploid a) => Diploid (Ratio a)
+-- (Ptr a)
+-- (FunPtr a)
+-- a => Diploid (Maybe a)
+-- (ForeignPtr a)
+-- (IsEven n)
+-- (IsZero n)
+-- a => Diploid (Last a)
+-- a => Diploid (First a)
+-- a => Diploid (Product a)
+-- a => Diploid (Sum a)
+-- a => Diploid (Dual a)
+-- a => Diploid (Complex a)
+-- HasResolution a => Diploid (Fixed a)
+-- (a -> b)
+-- (Diploid a, Diploid b) => Diploid (Either a b)
+-- (Diploid a, Diploid b) => Diploid (a, b)
+-- (ST s a)
+-- (SingE k (Kind k) rep, Diploid rep) => Diploid (Sing k a)
+-- (Diploid a, Diploid b, Diploid c) => Diploid (a, b, c)
+-- (Diploid a, Diploid b, Diploid c, Diploid d) => Diploid (a, b, c, d)
+-- (Diploid a, Diploid b, Diploid c, Diploid d, Diploid e) => Diploid (a, b, c, d, e)
+-- (Diploid a, Diploid b, Diploid c, Diploid d, Diploid e, Diploid f) => Diploid (a, b, c, d, e, f)
+-- (Diploid a, Diploid b, Diploid c, Diploid d, Diploid e, Diploid f, Diploid g) => Diploid (a, b, c, d, e, f, g)
+-- (Diploid a, Diploid b, Diploid c, Diploid d, Diploid e, Diploid f, Diploid g, Diploid h) => Diploid (a, b, c, d, e, f, g, h)
+-- (Diploid a, Diploid b, Diploid c, Diploid d, Diploid e, Diploid f, Diploid g, Diploid h, Diploid i) => Diploid (a, b, c, d, e, f, g, h, i)
+-- (Diploid a, Diploid b, Diploid c, Diploid d, Diploid e, Diploid f, Diploid g, Diploid h, Diploid i, Diploid j) => Diploid (a, b, c, d, e, f, g, h, i, j)
+-- (Diploid a, Diploid b, Diploid c, Diploid d, Diploid e, Diploid f, Diploid g, Diploid h, Diploid i, Diploid j, Diploid k) => Diploid (a, b, c, d, e, f, g, h, i, j, k)
+-- (Diploid a, Diploid b, Diploid c, Diploid d, Diploid e, Diploid f, Diploid g, Diploid h, Diploid i, Diploid j, Diploid k, Diploid l) => Diploid (a, b, c, d, e, f, g, h, i, j, k, l)
+-- (Diploid a, Diploid b, Diploid c, Diploid d, Diploid e, Diploid f, Diploid g, Diploid h, Diploid i, Diploid j, Diploid k, Diploid l, Diploid m) => Diploid (a, b, c, d, e, f, g, h, i, j, k, l, m)
+-- (Diploid a, Diploid b, Diploid c, Diploid d, Diploid e, Diploid f, Diploid g, Diploid h, Diploid i, Diploid j, Diploid k, Diploid l, Diploid m, Diploid n) => Diploid (a, b, c, d, e, f, g, h, i, j, k, l, m, n)
+-- (Diploid a, Diploid b, Diploid c, Diploid d, Diploid e, Diploid f, Diploid g, Diploid h, Diploid i, Diploid j, Diploid k, Diploid l, Diploid m, Diploid n, Diploid o) => Diploid (a, b, c, d, e, f, g, h, i, j, k, l, m, n, o)
 
 
 

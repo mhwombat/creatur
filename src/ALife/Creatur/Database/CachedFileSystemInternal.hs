@@ -24,7 +24,7 @@ import ALife.Creatur.Util (stateMap)
 import Control.Monad (when)
 import Control.Monad.State (StateT, get, gets, modify)
 
--- | A simple database where each record is stored in a separate file, 
+-- | A simple database where each record is stored in a separate file,
 --   and the name of the file is the record's key.
 data CachedFSDatabase r = CachedFSDatabase
   {
@@ -39,7 +39,7 @@ instance (SizedRecord r) => Database (CachedFSDatabase r) where
   keys = withFSDB keys
 
   numRecords = withFSDB numRecords
-  
+
   archivedKeys = withFSDB archivedKeys
 
   lookup k = do
@@ -65,7 +65,7 @@ instance (SizedRecord r) => Database (CachedFSDatabase r) where
     deleteByKeyFromCache k
     withFSDB (delete k)
 
-withFSDB 
+withFSDB
   :: Monad m
     => StateT (FS.FSDatabase r) m a -> StateT (CachedFSDatabase r) m a
 withFSDB f = do
@@ -106,7 +106,7 @@ trimCache = do
     modify (\d -> d {cache=trim m xs})
 
 trim :: SizedRecord r => Int -> [r] -> [r]
-trim m xs = if listSize xs > m 
+trim m xs = if listSize xs > m
               then trim m (init xs)
               else xs
 
@@ -117,4 +117,4 @@ listSize xs = sum $ map size xs
 -- | @'mkFSDatabase' d@ (re)creates the FSDatabase in the
 --   directory @d@.
 mkCachedFSDatabase :: FilePath -> Int -> CachedFSDatabase r
-mkCachedFSDatabase d s = CachedFSDatabase (FS.mkFSDatabase d) [] s
+mkCachedFSDatabase d = CachedFSDatabase (FS.mkFSDatabase d) []

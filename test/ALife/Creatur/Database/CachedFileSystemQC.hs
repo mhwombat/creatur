@@ -57,9 +57,9 @@ tryStoreDelete dir = do
   let db = mkCachedFSDatabase dir 10
   let record = TestRecord "alpha" 7
   db' <- execStateT (store record) db
-  assertBool "record not in cache" $ record `elem` (cache db')
+  assertBool "record not in cache" $ record `elem` cache db'
   db2 <- execStateT (delete $ key record) db'
-  assertBool "record still in cache" $ record `notElem` (cache db2)
+  assertBool "record still in cache" $ record `notElem` cache db2
 
 testStoreDelete :: IO ()
 testStoreDelete = withSystemTempDirectory "creaturTest.tmp" tryStoreDelete
@@ -71,7 +71,7 @@ tryCachedSize dir = do
   let record = TestRecord "one too many" 1
   db' <- execStateT (store record) db
   assertEqual "cache too big" (length (cache db')) 5
-  assertBool "record not in cache" $ record `elem` (cache db')
+  assertBool "record not in cache" $ record `elem` cache db'
 
 testCachedSize :: IO ()
 testCachedSize = withSystemTempDirectory "creaturTest.tmp" tryCachedSize

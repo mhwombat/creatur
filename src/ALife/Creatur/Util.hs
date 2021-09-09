@@ -171,7 +171,7 @@ reverseLookup value ((x,y):xys)
     | otherwise  =  reverseLookup value xys
 
 stateMap :: Monad m => (s -> t) -> (t -> s) -> StateT s m a -> StateT t m a
-stateMap f g (StateT h) = StateT $ liftM (fmap f) . h . g
+stateMap f g (StateT h) = StateT $ fmap (fmap f) . h . g
 
 -- | The 'fromEither' function takes a default value and an 'Either'
 --   value.  If the 'Either' is 'Left', it returns the default value;

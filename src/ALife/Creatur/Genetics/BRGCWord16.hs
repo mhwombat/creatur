@@ -23,7 +23,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE DefaultSignatures #-}
-{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE CPP #-}
 module ALife.Creatur.Genetics.BRGCWord16
@@ -116,8 +115,7 @@ class Genetic g where
 
   default get :: (Generic g, GGenetic (Rep g)) => Reader (Either [String] g)
   get = do
-    a <- gget
-    return $ fmap to a
+    fmap to <$> gget
 
   getWithDefault :: g -> Reader g
   getWithDefault d = fmap (fromEither d) get
@@ -168,8 +166,7 @@ instance (GGenetic a) => GGenetic (M1 i c a) where
 instance (Genetic a) => GGenetic (K1 i a) where
   gput (K1 x) = put x
   gget = do
-    a <- get
-    return $ fmap K1 a
+    fmap K1 <$> get
 
 --
 -- Instances
@@ -181,7 +178,7 @@ instance Genetic Bool where
   get = fmap (fmap word16ToBool) getRawWord16
 
 word16ToBool :: Word16 -> Bool
-word16ToBool x = if even x then False else True
+word16ToBool = odd
 
 instance Genetic Char where
   put = put . ord
@@ -316,4 +313,4 @@ expressEither (Right a) (Right b) = Right (express a b)
 expressEither (Right a) (Left _)  = Right a
 expressEither (Left _)  (Right b) = Right b
 expressEither (Left xs) (Left ys) =
-  Left $ (map ("sequence 1: " ++) xs) ++ (map ("sequence 2: " ++) ys)
+  Left $ map ("sequence 1: " ++) xs ++ map ("sequence 2: " ++) ys

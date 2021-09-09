@@ -23,7 +23,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE DefaultSignatures #-}
-{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE CPP #-}
@@ -124,8 +123,7 @@ class Genetic g where
 
   default get :: (Generic g, GGenetic (Rep g)) => Reader (Either [String] g)
   get = do
-    a <- gget
-    return $ fmap to a
+    fmap to <$> gget
 
   getWithDefault :: g -> Reader g
   getWithDefault d = fmap (fromEither d) get
@@ -161,7 +159,7 @@ instance (GGenetic a, GGenetic b) => GGenetic (a :+: b) where
 data LR = L | R
 
 convertLR :: [Word8] -> Either String (LR, String)
-convertLR (x:[]) = if even x -- Only care about the last bit
+convertLR [x] = if even x -- Only care about the last bit
                      then Right (L, "L1")
                      else Right (R, "R1")
 convertLR _ = Left "logic error"
@@ -175,8 +173,7 @@ instance (GGenetic a) => GGenetic (M1 i c a) where
 instance (Genetic a) => GGenetic (K1 i a) where
   gput (K1 x) = put x
   gget = do
-    a <- get
-    return $ fmap K1 a
+    fmap K1 <$> get a
 
 --
 -- Instances
@@ -185,12 +182,12 @@ instance (Genetic a) => GGenetic (K1 i a) where
 instance Genetic Bool where
   put b = putAndReport [fromIntegral $ fromEnum b] (show b)
   get = getAndReport 1 convert
-    where convert (x:[]) = Right (g, show g)
+    where convert [x] = Right (g, show g)
             where g = word8ToBool x
           convert _ = Left "logic error"
 
 word8ToBool :: Word8 -> Bool
-word8ToBool x = if even x then False else True
+word8ToBool = odd
 
 instance Genetic Char where
   put c = do
@@ -207,7 +204,7 @@ instance Genetic Char where
 instance Genetic Word8 where
   put x = putAndReport [integralToGray x] (show x ++ " Word8")
   get = getAndReport 1 convert
-    where convert (x:[]) = Right (g, show g ++ " Word8")
+    where convert [x] = Right (g, show g ++ " Word8")
             where g = grayToIntegral x
           convert _ = Left "logic error"
 
@@ -319,7 +316,7 @@ finalise = do
 getList :: Genetic a => Int -> Reader (Either [String] [a])
 getList 0 = return $ Right []
 getList n = do
-  cs <- sequence $ replicate n get
+  cs <- replicateM n get
   let (mss, xs) = partitionEithers cs
   if null mss
     then return $ Right xs
@@ -345,11 +342,11 @@ getRawWord8 = do
 
 -- | Write a raw sequence of Word8 values to the genome
 putRawWord8s :: [Word8] -> Writer ()
-putRawWord8s ws = mapM_ putRawWord8 ws
+putRawWord8s = mapM_ putRawWord8
 
 -- | Read a raw sequence of Word8 values from the genome
 getRawWord8s :: Int -> Reader (Either [String] [Word8])
-getRawWord8s n = fmap sequence $ replicateM n getRawWord8
+getRawWord8s n = sequence <$> replicateM n getRawWord8
 
 reportW :: String -> Writer ()
 reportW desc = do
@@ -372,7 +369,7 @@ reportR desc = do
   let msg = show i ++ ": read " ++ desc
   S.put (xs, i, msg:msgs)
 
-getAndReport :: Int -> ([Word8] -> (Either String (g, String))) -> Reader (Either [String] g)
+getAndReport :: Int -> ([Word8] -> Either String (g, String)) -> Reader (Either [String] g)
 getAndReport n parse = do
   a <- getRawWord8s n
   case a of
@@ -440,4 +437,4 @@ expressEither (Right a) (Right b) = Right (express a b)
 expressEither (Right a) (Left _)  = Right a
 expressEither (Left _)  (Right b) = Right b
 expressEither (Left xs) (Left ys) =
-  Left $ (map ("sequence 1: " ++) xs) ++ (map ("sequence 2: " ++) ys)
+  Left $ map ("sequence 1: " ++) xs ++ map ("sequence 2: " ++) ys

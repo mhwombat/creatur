@@ -10,7 +10,6 @@
 -- A simple counter which persists between runs.
 --
 ------------------------------------------------------------------------
-{-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module ALife.Creatur.Counter

@@ -4,6 +4,7 @@ name:               creatur
 version:            5.9.31
 description:
   Please see the README on GitHub at <https://github.com/mhwombat/creatur#readme>
+
 homepage:           https://github.com/mhwombat/creatur
 bug-reports:        https://github.com/mhwombat/creatur/issues
 license:            BSD-3-Clause
@@ -52,6 +53,7 @@ library
     ALife.Creatur.Task
     ALife.Creatur.Universe
     ALife.Creatur.Util
+
   other-modules:   Paths_creatur
   autogen-modules: Paths_creatur
   ghc-options:     -Wall -Wunused-packages
@@ -94,8 +96,10 @@ test-suite creatur-test
     ALife.Creatur.PersistentQC
     ALife.Creatur.UniverseQC
     ALife.Creatur.UtilQC
+
   ghc-options:
     -threaded -rtsopts -with-rtsopts=-N -Wall -Wunused-packages
+
   build-depends:
     , base
     , cereal

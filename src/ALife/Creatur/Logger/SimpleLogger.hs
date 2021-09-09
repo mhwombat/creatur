@@ -7,7 +7,7 @@
 -- Stability   :  experimental
 -- Portability :  portable
 --
--- A simple rotating log, tailored to the needs of the Créatúr 
+-- A simple rotating log, tailored to the needs of the Créatúr
 -- framework.
 --
 ------------------------------------------------------------------------
@@ -36,7 +36,7 @@ data SimpleLogger = SimpleLogger {
 -- | @'mkSimpleLogger' f@ creates a logger that will write to
 --   file @f@.
 mkSimpleLogger :: FilePath -> SimpleLogger
-mkSimpleLogger f = SimpleLogger False f
+mkSimpleLogger = SimpleLogger False
 
 instance Logger SimpleLogger where
   writeToLog msg = do
@@ -49,7 +49,7 @@ initIfNeeded =
 
 initialise :: StateT SimpleLogger IO ()
 initialise = do
-  (d,_) <- fmap splitFileName $ gets logFilename
+  (d,_) <- gets (splitFileName . logFilename)
   liftIO $ createDirectoryIfMissing True d
   modify (\l -> l { initialised=True } )
 

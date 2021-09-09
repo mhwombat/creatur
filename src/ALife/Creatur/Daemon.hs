@@ -42,6 +42,7 @@ import           System.Posix.User
     groupName)
 
 termReceived :: MVar Bool
+{-# NOINLINE termReceived #-}
 termReceived = unsafePerformIO (newMVar False)
 
 -- | The work to be performed by a daemon.
@@ -124,7 +125,7 @@ daemonMainLoop :: Job s -> s -> IO ()
 daemonMainLoop t s = do
   let st = sleepTime t
   stopRequested <- readMVar termReceived
-  when (not stopRequested) $ do
+  unless stopRequested $ do
     s' <- handle (onException t s) $ execStateT (task t) s
     when (st > 0) $ threadDelay st
     daemonMainLoop t s'

@@ -11,7 +11,7 @@
 --
 ------------------------------------------------------------------------
 {-# LANGUAGE TypeFamilies, FlexibleContexts, FlexibleInstances,
-    DefaultSignatures, DeriveGeneric, TypeOperators #-}
+    DefaultSignatures, TypeOperators #-}
 module ALife.Creatur.Genetics.Analysis
   (
     Analysable(..)

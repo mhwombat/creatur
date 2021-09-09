@@ -57,8 +57,7 @@ modifyPS f = do
 
 runPS :: Read a => (a -> b) -> StateT (Persistent a) IO b
 runPS f = do
-  p <- getPS
-  return $ f p
+  f <$> getPS
 
 store :: Show a => Persistent a -> IO ()
 store p = do

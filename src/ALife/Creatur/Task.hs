@@ -58,10 +58,10 @@ simpleJob = Job
   }
 
 startupHandler :: Universe u => u -> IO u
-startupHandler = execStateT (writeToLog $ "Starting")
+startupHandler = execStateT (writeToLog "Starting")
 
 shutdownHandler :: Universe u => u -> IO ()
-shutdownHandler u = evalStateT (writeToLog "Shutdown requested") u
+shutdownHandler = evalStateT (writeToLog "Shutdown requested")
 
 exceptionHandler :: Universe u => u -> SomeException -> IO u
 exceptionHandler u x = execStateT (writeToLog ("WARNING: " ++ show x)) u
@@ -79,7 +79,7 @@ runNoninteractingAgents agentProgram startRoundProgram
     endRoundProgram = do
   atStartOfRound startRoundProgram
   as <- lineup
-  when (not . null $ as) $ do
+  unless (null as) $ do
     let a = head as
     catchAll (withAgent agentProgram a) reportException
     markDone a

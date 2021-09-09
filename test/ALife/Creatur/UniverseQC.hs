@@ -81,17 +81,17 @@ testUniverseDB' dir = do
   let a = TestAgent "agent_a" True
   u2 <- execStateT (store a) u
   xs <- evalStateT agentIds u2
-  assertBool "agent not in agentIds list" ((A.agentId a) `elem` xs)
+  assertBool "agent not in agentIds list" (A.agentId a `elem` xs)
   let a2 = a { aIsAlive=False }
   u3 <- execStateT (store a2) u2
   xs' <- evalStateT agentIds u3
-  assertBool "agent still in agentIds list" ((A.agentId a) `notElem` xs')
+  assertBool "agent still in agentIds list" (A.agentId a `notElem` xs')
   let f = logFileName ++ "/db/" ++ A.agentId a
   fileExists <- doesFileExist f
   assertBool "agent file not removed" (not fileExists)
   let f2 = logFileName ++ "/db/archive/" ++ A.agentId a
   fileExists2 <- doesFileExist f2
-  assertBool "agent file not archived" (fileExists2)
+  assertBool "agent file not archived" fileExists2
 
 testUniverseLineup :: IO ()
 testUniverseLineup = withSystemTempDirectory "creaturTest.tmp" testUniverseLineup'
@@ -105,11 +105,11 @@ testUniverseLineup' dir = do
   let c = TestAgent "agent_c" True
   u2 <- execStateT (store a >> store b >> store c >> refreshLineup) u
   xs <- evalStateT lineup u2
-  assertBool "agent not in lineup" ((A.agentId a) `elem` xs)
+  assertBool "agent not in lineup" (A.agentId a `elem` xs)
   let a2 = a { aIsAlive=False }
   u3 <- execStateT (store a2 >> markDone (A.agentId a2)) u2
   xs' <- evalStateT lineup u3
-  assertBool "agent still in lineup" ((A.agentId a) `notElem` xs')
+  assertBool "agent still in lineup" (A.agentId a `notElem` xs')
 
 test :: TF.Test
 test = testGroup "HUnit ALife.Creatur.UniverseQC"
