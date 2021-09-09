@@ -38,7 +38,7 @@ module ALife.Creatur.Util
 --    constrain,
   ) where
 
-import Control.Monad (forM_, liftM)
+import Control.Monad (forM_)
 import Control.Monad.Random (Rand, RandomGen, getRandomRs)
 import Control.Monad.State (StateT(..), get, lift, put)
 import Data.Array.ST (runSTArray)

@@ -40,7 +40,7 @@ import ALife.Creatur.Universe (Universe, Agent, AgentProgram,
   withAgent, withAgents, incTime, popSize)
 import Control.Conditional (whenM)
 import Control.Exception (SomeException)
-import Control.Monad (when)
+import Control.Monad (when, unless)
 import Control.Monad.Catch (catchAll)
 import Control.Monad.State (StateT, execStateT, evalStateT)
 import Control.Monad.Trans.Class (lift)

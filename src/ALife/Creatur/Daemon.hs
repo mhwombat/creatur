@@ -27,7 +27,7 @@ module ALife.Creatur.Daemon
 import           Control.Concurrent
     (MVar, newMVar, readMVar, swapMVar, threadDelay)
 import           Control.Exception      (SomeException, catch, handle)
-import           Control.Monad          (when)
+import           Control.Monad          (when, unless)
 import           Control.Monad.State    (StateT, execStateT)
 import           Foreign.C.String       (withCStringLen)
 import           System.IO              (hPutStrLn, stderr)

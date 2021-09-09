@@ -173,7 +173,7 @@ instance (GGenetic a) => GGenetic (M1 i c a) where
 instance (Genetic a) => GGenetic (K1 i a) where
   gput (K1 x) = put x
   gget = do
-    fmap K1 <$> get a
+    fmap K1 <$> get
 
 --
 -- Instances

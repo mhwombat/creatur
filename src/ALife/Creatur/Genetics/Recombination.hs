@@ -91,7 +91,7 @@ randomCrossover (as, bs) = do
 mutateList :: (Random n, RandomGen g) => [n] -> Rand g [n]
 mutateList xs = do
   (i, _) <- randomListSelection xs
-  safeReplaceElement xs i x <$> getRandom
+  safeReplaceElement xs i <$> getRandom
 
 -- | Mutates a random element in one list in a pair.
 mutatePairedLists ::
