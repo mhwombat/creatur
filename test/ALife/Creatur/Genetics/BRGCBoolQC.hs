@@ -10,31 +10,32 @@
 -- QuickCheck tests.
 --
 ------------------------------------------------------------------------
-{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE CPP               #-}
+{-# LANGUAGE DeriveGeneric     #-}
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE CPP #-}
 module ALife.Creatur.Genetics.BRGCBoolQC
   (
     test
   ) where
 
-import Prelude hiding (read)
-import ALife.Creatur.Genetics.BRGCBool
-import ALife.Creatur.Genetics.Analysis (Analysable)
-import Data.Word (Word8, Word16)
-import GHC.Generics (Generic)
-import Test.Framework as TF (Test, testGroup)
-import Test.Framework.Providers.QuickCheck2 (testProperty)
-import Test.QuickCheck (Arbitrary, Gen, Property, arbitrary,
-  choose, oneof, property, sized, vectorOf)
+import           ALife.Creatur.Genetics.Analysis      (Analysable)
+import           ALife.Creatur.Genetics.BRGCBool
+import           Data.Word                            (Word16, Word8)
+import           GHC.Generics                         (Generic)
+import           Prelude                              hiding (read)
+import           Test.Framework                       as TF (Test, testGroup)
+import           Test.Framework.Providers.QuickCheck2 (testProperty)
+import           Test.QuickCheck                      (Arbitrary, Gen, Property,
+                                                       arbitrary, choose, oneof,
+                                                       sized, vectorOf)
 
 #if MIN_VERSION_base(4,8,0)
 #else
-import Control.Applicative
+import           Control.Applicative
 #endif
 
-prop_round_trippable :: (Eq g, Genetic g) => g -> Property
-prop_round_trippable g = property $ g' == Right g
+prop_round_trippable :: (Eq g, Genetic g) => g -> Bool
+prop_round_trippable g = g' == Right g
   where x = write g
         g' = read x
 
@@ -57,7 +58,7 @@ sizedArbTestStructure n = do
           D <$> arbitrary <*> arbitrary,
           E <$> vectorOf k (sizedArbTestStructure (n-1))
         ]
-  
+
 instance Arbitrary TestStructure where
   arbitrary = sized sizedArbTestStructure
 
@@ -65,13 +66,13 @@ test :: Test
 test = testGroup "ALife.Creatur.Genetics.BRGCBoolQC"
   [
     testProperty "prop_round_trippable - Bool"
-      (prop_round_trippable :: Bool -> Property),
+      (prop_round_trippable :: Bool -> Bool),
     testProperty "prop_round_trippable - Char"
-      (prop_round_trippable :: Char -> Property),
+      (prop_round_trippable :: Char -> Bool),
     testProperty "prop_round_trippable - Word8"
-      (prop_round_trippable :: Word8 -> Property),
+      (prop_round_trippable :: Word8 -> Bool),
     testProperty "prop_round_trippable - Word16"
-      (prop_round_trippable :: Word16 -> Property),
+      (prop_round_trippable :: Word16 -> Bool),
     -- testProperty "prop_round_trippable - Word32"
     --   (prop_round_trippable :: Word32 -> Property),
     -- testProperty "prop_round_trippable - Word64"
@@ -83,7 +84,7 @@ test = testGroup "ALife.Creatur.Genetics.BRGCBoolQC"
     -- testProperty "prop_round_trippable - Double"
     --   (prop_round_trippable :: Double -> Property),
     testProperty "prop_round_trippable - TestStructure"
-      (prop_round_trippable :: TestStructure -> Property)
+      (prop_round_trippable :: TestStructure -> Bool)
   ]
 
 

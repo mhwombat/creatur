@@ -15,14 +15,15 @@ module ALife.Creatur.UtilQC
     test
   ) where
 
-import ALife.Creatur.Util (cropRect, cropSquare, isqrt, replaceElement, 
-  safeReplaceElement, shuffle)
-import Control.Monad.Random (evalRand, mkStdGen)
-import Data.Ix (range)
-import Data.List (sort)
-import Test.Framework as TF (Test, testGroup)
-import Test.Framework.Providers.QuickCheck2 (testProperty)
-import Test.QuickCheck (Property, property)
+import           ALife.Creatur.Util                   (cropRect, cropSquare,
+                                                       isqrt, replaceElement,
+                                                       safeReplaceElement,
+                                                       shuffle)
+import           Control.Monad.Random                 (evalRand, mkStdGen)
+import           Data.Ix                              (range)
+import           Data.List                            (sort)
+import           Test.Framework                       as TF (Test, testGroup)
+import           Test.Framework.Providers.QuickCheck2 (testProperty)
 
 -- prop_constrain_obeys_bounds :: (Int, Int) -> Int -> Property
 -- prop_constrain_obeys_bounds (a, b) x = property $ a <= x' && x' <= b
@@ -33,9 +34,9 @@ import Test.QuickCheck (Property, property)
 --  where x' = constrain (a, b) x
 
 prop_cropRect_returns_correct_size ::
-  (Int, Int) -> (Int, Int) -> String -> Int -> Property
-prop_cropRect_returns_correct_size (a,b) (c,d) xs k =
-    property $ length xs' == expectedSize || length xs < minimalOriginalSize
+  (Int, Int) -> (Int, Int) -> String -> Int -> Bool
+prop_cropRect_returns_correct_size (a,b) (c,d) xs k
+  = length xs' == expectedSize || length xs < minimalOriginalSize
   where expectedSize = length is'
         is = range ((0,0),(lastRow,lastCol))
         is' = filter wanted is
@@ -54,37 +55,33 @@ constrain (a,b) x | x < a     = a
                   | x > b     = b
                   | otherwise = x
 
-prop_cropSquare_returns_correct_size :: Int -> String -> Property
-prop_cropSquare_returns_correct_size n xs =
-    property $ length xs' == expectedSize
+prop_cropSquare_returns_correct_size :: Int -> String -> Bool
+prop_cropSquare_returns_correct_size n xs
+  = length xs' == expectedSize
   where expectedRows = min n ((isqrt . length) xs)
         expectedSize = if n < 0 then 0 else expectedRows*expectedRows
         xs' = cropSquare n xs
 
-prop_replaceElement_changes_the_right_element :: String -> Int -> Char -> Property
-prop_replaceElement_changes_the_right_element cs i c =
-  property
-    $
-      if 0 <= i && i < length cs
+prop_replaceElement_changes_the_right_element :: String -> Int -> Char -> Bool
+prop_replaceElement_changes_the_right_element cs i c
+  = if 0 <= i && i < length cs
         then replaceElement cs i c !! i == c
         else replaceElement cs i c == cs
 
-prop_safeReplaceElement_doesnt_change_length :: String -> Int -> Char -> Property
-prop_safeReplaceElement_doesnt_change_length cs i c =
-  property $ length cs == length (safeReplaceElement cs i c)
+prop_safeReplaceElement_doesnt_change_length :: String -> Int -> Char -> Bool
+prop_safeReplaceElement_doesnt_change_length cs i c
+  = length cs == length (safeReplaceElement cs i c)
 
 prop_safeReplaceElement_changes_the_right_element ::
-  String -> Int -> Char -> Property
-prop_safeReplaceElement_changes_the_right_element cs i c =
-  property
-    $
-      if 0 <= i && i < length cs
+  String -> Int -> Char -> Bool
+prop_safeReplaceElement_changes_the_right_element cs i c
+  = if 0 <= i && i < length cs
         then cs' !! i == c
         else cs' == cs
   where cs' = safeReplaceElement cs i c
 
-prop_shuffle_doesnt_change_elements :: String -> Int -> Property
-prop_shuffle_doesnt_change_elements xs k = property $ sort xs == sort xs'
+prop_shuffle_doesnt_change_elements :: String -> Int -> Bool
+prop_shuffle_doesnt_change_elements xs k = sort xs == sort xs'
   where xs' = evalRand (shuffle xs) (mkStdGen k)
 
 test :: Test

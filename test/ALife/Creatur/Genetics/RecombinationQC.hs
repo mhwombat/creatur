@@ -15,20 +15,19 @@ module ALife.Creatur.Genetics.RecombinationQC
     test
   ) where
 
-import ALife.Creatur.Genetics.Recombination (crossover, cutAndSplice)
-import Test.Framework as TF (Test, testGroup)
-import Test.Framework.Providers.QuickCheck2 (testProperty)
-import Test.QuickCheck (Property, property)
+import           ALife.Creatur.Genetics.Recombination (crossover, cutAndSplice)
+import           Test.Framework                       as TF (Test, testGroup)
+import           Test.Framework.Providers.QuickCheck2 (testProperty)
 
 prop_cutAndSplice_preserves_sum_of_lengths ::
-  Int -> Int -> (String, String) -> Property
-prop_cutAndSplice_preserves_sum_of_lengths n m (as, bs) =
-  property $ length as' + length bs' == length as + length bs
+  Int -> Int -> (String, String) -> Bool
+prop_cutAndSplice_preserves_sum_of_lengths n m (as, bs)
+  = length as' + length bs' == length as + length bs
     where (as', bs') = cutAndSplice n m (as, bs)
 
-prop_crossover_preserves_sum_of_lengths :: Int -> (String, String) -> Property
-prop_crossover_preserves_sum_of_lengths n (as, bs) =
-  property $ length as' + length bs' == length as + length bs
+prop_crossover_preserves_sum_of_lengths :: Int -> (String, String) -> Bool
+prop_crossover_preserves_sum_of_lengths n (as, bs)
+  = length as' + length bs' == length as + length bs
     where (as', bs') = crossover n (as, bs)
 
 test :: Test

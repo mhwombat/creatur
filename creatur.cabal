@@ -58,25 +58,25 @@ library
   autogen-modules: Paths_creatur
   ghc-options:     -Wall -Wunused-packages
   build-depends:
-    , array          ^>=0.5.2
-    , base           >=4.7    && <5
-    , binary         >=0.8    && <0.11
-    , bytestring     >=0.10.8 && <0.12
-    , cereal         ^>=0.5.7
-    , cond           ^>=0.4.1
-    , directory      ^>=1.3.1
-    , exceptions     ^>=0.10.0
-    , filepath       ^>=1.4.2
-    , gray-extended  ^>=1.5.9
-    , hdaemonize     ^>=0.5.5
-    , hsyslog        ^>=5.0.1
-    , MonadRandom    ^>=0.5.1
-    , mtl            ^>=2.2.2
-    , random         >=1.1    && <1.3
-    , split          ^>=0.2.3
-    , time           >=1.1    && <1.13
-    , transformers   >=0.5.5  && <0.7
-    , unix           ^>=2.7.2
+    , array                 >= 0.5.4 && < 0.6
+    , base                  >= 4.7 && < 5
+    , binary                >= 0.8.8 && < 0.11
+    , bytestring            >= 0.10.12 && < 0.12
+    , cereal                >= 0.5.8 && < 0.6
+    , cond                  >= 0.4.1 && < 0.5
+    , directory             >= 1.3.6 && < 1.4
+    , exceptions            >= 0.10.4 && < 0.11
+    , filepath              >= 1.4.2 && < 1.5
+    , gray-extended         >= 1.5.10 && < 1.6
+    , hdaemonize            >= 0.5.6 && < 0.6
+    , hsyslog               >= 5.0.2 && < 5.1
+    , MonadRandom           >= 0.5.3 && < 0.6
+    , mtl                   >= 2.2.2 && < 2.3
+    , random                >= 1.2.0 && < 1.3
+    , split                 >= 0.2.3 && < 0.3
+    , time                  >= 1.9.3 && < 1.14
+    , transformers          >= 0.5.6 && < 0.7
+    , unix                  >= 2.7.2 && < 2.8
 
 test-suite creatur-test
   import:         common-stuff

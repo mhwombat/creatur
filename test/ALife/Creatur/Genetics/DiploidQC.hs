@@ -10,25 +10,26 @@
 -- QuickCheck tests.
 --
 ------------------------------------------------------------------------
-{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE CPP               #-}
+{-# LANGUAGE DeriveGeneric     #-}
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE CPP #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module ALife.Creatur.Genetics.DiploidQC
   (
     test
   ) where
 
-import ALife.Creatur.Genetics.Diploid
-import GHC.Generics (Generic)
-import Test.Framework as TF (Test, testGroup)
-import Test.Framework.Providers.QuickCheck2 (testProperty)
-import Test.QuickCheck (Arbitrary, Gen, Property, arbitrary, choose,
-  oneof, property, sized, vectorOf)
+import           ALife.Creatur.Genetics.Diploid
+import           GHC.Generics                         (Generic)
+import           Test.Framework                       as TF (Test, testGroup)
+import           Test.Framework.Providers.QuickCheck2 (testProperty)
+import           Test.QuickCheck                      (Arbitrary, Gen,
+                                                       arbitrary, choose, oneof,
+                                                       sized, vectorOf)
 
 #if MIN_VERSION_base(4,8,0)
 #else
-import Control.Applicative
+import           Control.Applicative
 #endif
 
 data TestStructure = A | B Bool | C Int | D Bool Char | E [TestStructure]
@@ -49,12 +50,12 @@ sizedArbTestStructure n = do
           D <$> arbitrary <*> arbitrary,
           E <$> vectorOf k (sizedArbTestStructure (n-1))
         ]
-  
+
 instance Arbitrary TestStructure where
   arbitrary = sized sizedArbTestStructure
 
-prop_identity :: TestStructure -> Property
-prop_identity g = property $ express g g == g
+prop_identity :: TestStructure -> Bool
+prop_identity g = express g g == g
 
 
 test :: Test

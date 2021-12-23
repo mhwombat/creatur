@@ -10,32 +10,34 @@
 -- QuickCheck tests.
 --
 ------------------------------------------------------------------------
-{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE CPP               #-}
+{-# LANGUAGE DeriveGeneric     #-}
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE CPP #-}
 module ALife.Creatur.Genetics.BRGCWord8QC
   (
     test
   ) where
 
-import Prelude hiding (read)
-import ALife.Creatur.Genetics.BRGCWord8
-import ALife.Creatur.Genetics.Analysis (Analysable)
-import ALife.Creatur.Util (fromEither)
-import Data.Word (Word8, Word16, Word32, Word64)
-import GHC.Generics (Generic)
-import Test.Framework as TF (Test, testGroup)
-import Test.Framework.Providers.QuickCheck2 (testProperty)
-import Test.QuickCheck ((==>), Arbitrary, Gen, Property, arbitrary,
-  choose, oneof, property, sized, vectorOf)
+import           ALife.Creatur.Genetics.Analysis      (Analysable)
+import           ALife.Creatur.Genetics.BRGCWord8
+import           ALife.Creatur.Util                   (fromEither)
+import           Data.Word                            (Word16, Word32, Word64,
+                                                       Word8)
+import           GHC.Generics                         (Generic)
+import           Prelude                              hiding (read)
+import           Test.Framework                       as TF (Test, testGroup)
+import           Test.Framework.Providers.QuickCheck2 (testProperty)
+import           Test.QuickCheck                      (Arbitrary, Gen, Property,
+                                                       arbitrary, choose, oneof,
+                                                       sized, vectorOf, (==>))
 
 #if MIN_VERSION_base(4,8,0)
 #else
-import Control.Applicative
+import           Control.Applicative
 #endif
 
-prop_round_trippable :: (Eq g, Genetic g) => g -> Property
-prop_round_trippable g = property $ g' == Right g
+prop_round_trippable :: (Eq g, Genetic g) => g -> Bool
+prop_round_trippable g = g' == Right g
   where x = write g
         g' = read x
 
@@ -46,8 +48,8 @@ prop_round_trippable2 n xs dummy = length xs >= n
   where Right g = read xs
         xs' = write (g `asTypeOf` dummy)
 
-prop_rawWord8s_round_trippable :: [Word8] -> Property
-prop_rawWord8s_round_trippable g = property $ g' == g
+prop_rawWord8s_round_trippable :: [Word8] -> Bool
+prop_rawWord8s_round_trippable g = g' == g
   where x = fst $ runWriter (putRawWord8s g)
         g' = fromEither (error "read returned Nothing") .
                fst . runReader (getRawWord8s n) $ x
@@ -72,7 +74,7 @@ sizedArbTestStructure n = do
           D <$> arbitrary <*> arbitrary,
           E <$> vectorOf k (sizedArbTestStructure (n-1))
         ]
-  
+
 instance Arbitrary TestStructure where
   arbitrary = sized sizedArbTestStructure
 
@@ -80,23 +82,23 @@ test :: Test
 test = testGroup "ALife.Creatur.Genetics.BRGCWord8QC"
   [
     testProperty "prop_round_trippable - Bool"
-      (prop_round_trippable :: Bool -> Property),
+      (prop_round_trippable :: Bool -> Bool),
     testProperty "prop_round_trippable - Char"
-      (prop_round_trippable :: Char -> Property),
+      (prop_round_trippable :: Char -> Bool),
     testProperty "prop_round_trippable - Word8"
-      (prop_round_trippable :: Word8 -> Property),
+      (prop_round_trippable :: Word8 -> Bool),
     testProperty "prop_round_trippable - Word16"
-      (prop_round_trippable :: Word16 -> Property),
+      (prop_round_trippable :: Word16 -> Bool),
     testProperty "prop_round_trippable - Word32"
-      (prop_round_trippable :: Word32 -> Property),
+      (prop_round_trippable :: Word32 -> Bool),
     testProperty "prop_round_trippable - Word64"
-      (prop_round_trippable :: Word64 -> Property),
+      (prop_round_trippable :: Word64 -> Bool),
     testProperty "prop_round_trippable - Int"
-      (prop_round_trippable :: Int -> Property),
+      (prop_round_trippable :: Int -> Bool),
     testProperty "prop_round_trippable - Integer"
-      (prop_round_trippable :: Integer -> Property),
+      (prop_round_trippable :: Integer -> Bool),
     testProperty "prop_round_trippable - Double"
-      (prop_round_trippable :: Double -> Property),
+      (prop_round_trippable :: Double -> Bool),
     testProperty "prop_round_trippable2 - Word8"
       (prop_round_trippable2 1 :: [Word8] -> Word8 -> Property),
     testProperty "prop_round_trippable2 - Word16"
@@ -106,7 +108,7 @@ test = testGroup "ALife.Creatur.Genetics.BRGCWord8QC"
     testProperty "prop_round_trippable2 - Word64"
       (prop_round_trippable2 8 :: [Word8] -> Word64 -> Property),
     testProperty "prop_round_trippable - TestStructure"
-      (prop_round_trippable :: TestStructure -> Property),
+      (prop_round_trippable :: TestStructure -> Bool),
     testProperty "prop_rawWord8s_round_trippable"
       prop_rawWord8s_round_trippable
   ]
