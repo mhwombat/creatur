@@ -10,18 +10,25 @@
 -- TODO
 --
 ------------------------------------------------------------------------
-{-# LANGUAGE TypeFamilies, FlexibleContexts, FlexibleInstances,
-    DefaultSignatures, TypeOperators #-}
+{-# LANGUAGE DefaultSignatures #-}
+{-# LANGUAGE FlexibleContexts  #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE TypeFamilies      #-}
+{-# LANGUAGE TypeOperators     #-}
 module ALife.Creatur.Genetics.Diploid
   (
     Diploid(..),
-    expressMaybe
+    expressMaybe,
+    -- * Convenience functions for deriving instances of @Diploid@
+    ordMin,
+    integralMidpoint,
+    floatingMidpoint
     -- * Deriving generic instances of @Diploid@
     -- $Generic
   ) where
 
-import Data.Word
-import GHC.Generics
+import           Data.Word
+import           GHC.Generics
 
 -- | A /diploid/ agent has two complete sets of genetic instructions.
 --   Instances of this class can be thought of as paired genes or
@@ -68,28 +75,28 @@ instance Diploid Bool where
   express a b = a || b
 
 instance Diploid Char where
-  express = min
+  express = ordMin
 
 instance Diploid Int where
-  express = min
+  express = integralMidpoint
 
 instance Diploid Word where
-  express = min
+  express = integralMidpoint
 
 instance Diploid Word8 where
-  express = min
+  express = integralMidpoint
 
 instance Diploid Word16 where
-  express = min
+  express = integralMidpoint
 
 instance Diploid Word32 where
-  express = min
+  express = integralMidpoint
 
 instance Diploid Word64 where
-  express = min
+  express = integralMidpoint
 
 instance Diploid Double where
-  express = min
+  express = floatingMidpoint
 
 instance (Diploid a) => Diploid [a]
 
@@ -97,151 +104,30 @@ instance (Diploid a) => Diploid (Maybe a)
 
 instance (Diploid a, Diploid b) => Diploid (a, b)
 
--- TODO: Types I might want to define instances for
--- Bool
--- Char
--- Double
--- Float
--- Int
--- Int8
--- Int16
--- Int32
--- Int64
--- Integer
--- Ordering
--- Word
--- Word8
--- Word16
--- Word32
--- Word64
--- ()
--- TyCon
--- TypeRep
--- ArithException
--- ErrorCall
--- SomeException
--- IOException
--- MaskingState
--- Lexeme
--- IOMode
--- SeekMode
--- CUIntMax
--- CIntMax
--- CUIntPtr
--- CIntPtr
--- CSUSeconds
--- CUSeconds
--- CTime
--- CClock
--- CSigAtomic
--- CWchar
--- CSize
--- CPtrdiff
--- CDouble
--- CFloat
--- CULLong
--- CLLong
--- CULong
--- CLong
--- CUInt
--- CInt
--- CUShort
--- CShort
--- CUChar
--- CSChar
--- CChar
--- GeneralCategory
--- Associativity
--- Fixity
--- Arity
--- Dynamic
--- IntPtr
--- WordPtr
--- Any
--- All
--- CodingProgress
--- TextEncoding
--- NewlineMode
--- Newline
--- BufferMode
--- Handle
--- IOErrorType
--- ExitCode
--- ArrayException
--- AsyncException
--- AssertionFailed
--- Deadlock
--- BlockedIndefinitelyOnSTM
--- BlockedIndefinitelyOnMVar
--- CodingFailureMode
--- ThreadStatus
--- BlockReason
--- ThreadId
--- NestedAtomically
--- NonTermination
--- NoMethodError
--- RecUpdError
--- RecConError
--- RecSelError
--- PatternMatchFail
--- Fd
--- CRLim
--- CTcflag
--- CSpeed
--- CCc
--- CUid
--- CNlink
--- CGid
--- CSsize
--- CPid
--- COff
--- CMode
--- CIno
--- CDev
--- Event
--- FdKey
--- HandlePosn
--- Fixity
--- ConstrRep
--- DataRep
--- Constr
--- DataType
--- GCStats
--- Version
--- a => Diploid [a]
--- (Integral a, Diploid a) => Diploid (Ratio a)
--- (Ptr a)
--- (FunPtr a)
--- a => Diploid (Maybe a)
--- (ForeignPtr a)
--- (IsEven n)
--- (IsZero n)
--- a => Diploid (Last a)
--- a => Diploid (First a)
--- a => Diploid (Product a)
--- a => Diploid (Sum a)
--- a => Diploid (Dual a)
--- a => Diploid (Complex a)
--- HasResolution a => Diploid (Fixed a)
--- (a -> b)
--- (Diploid a, Diploid b) => Diploid (Either a b)
--- (Diploid a, Diploid b) => Diploid (a, b)
--- (ST s a)
--- (SingE k (Kind k) rep, Diploid rep) => Diploid (Sing k a)
--- (Diploid a, Diploid b, Diploid c) => Diploid (a, b, c)
--- (Diploid a, Diploid b, Diploid c, Diploid d) => Diploid (a, b, c, d)
--- (Diploid a, Diploid b, Diploid c, Diploid d, Diploid e) => Diploid (a, b, c, d, e)
--- (Diploid a, Diploid b, Diploid c, Diploid d, Diploid e, Diploid f) => Diploid (a, b, c, d, e, f)
--- (Diploid a, Diploid b, Diploid c, Diploid d, Diploid e, Diploid f, Diploid g) => Diploid (a, b, c, d, e, f, g)
--- (Diploid a, Diploid b, Diploid c, Diploid d, Diploid e, Diploid f, Diploid g, Diploid h) => Diploid (a, b, c, d, e, f, g, h)
--- (Diploid a, Diploid b, Diploid c, Diploid d, Diploid e, Diploid f, Diploid g, Diploid h, Diploid i) => Diploid (a, b, c, d, e, f, g, h, i)
--- (Diploid a, Diploid b, Diploid c, Diploid d, Diploid e, Diploid f, Diploid g, Diploid h, Diploid i, Diploid j) => Diploid (a, b, c, d, e, f, g, h, i, j)
--- (Diploid a, Diploid b, Diploid c, Diploid d, Diploid e, Diploid f, Diploid g, Diploid h, Diploid i, Diploid j, Diploid k) => Diploid (a, b, c, d, e, f, g, h, i, j, k)
--- (Diploid a, Diploid b, Diploid c, Diploid d, Diploid e, Diploid f, Diploid g, Diploid h, Diploid i, Diploid j, Diploid k, Diploid l) => Diploid (a, b, c, d, e, f, g, h, i, j, k, l)
--- (Diploid a, Diploid b, Diploid c, Diploid d, Diploid e, Diploid f, Diploid g, Diploid h, Diploid i, Diploid j, Diploid k, Diploid l, Diploid m) => Diploid (a, b, c, d, e, f, g, h, i, j, k, l, m)
--- (Diploid a, Diploid b, Diploid c, Diploid d, Diploid e, Diploid f, Diploid g, Diploid h, Diploid i, Diploid j, Diploid k, Diploid l, Diploid m, Diploid n) => Diploid (a, b, c, d, e, f, g, h, i, j, k, l, m, n)
--- (Diploid a, Diploid b, Diploid c, Diploid d, Diploid e, Diploid f, Diploid g, Diploid h, Diploid i, Diploid j, Diploid k, Diploid l, Diploid m, Diploid n, Diploid o) => Diploid (a, b, c, d, e, f, g, h, i, j, k, l, m, n, o)
+{-
+    Convenience functions for implementing Diploid
+-}
 
+-- | This function may be used to derive instances of @Diploid@ for
+--   ordinal types.
+--   The result is the minimum of the two inputs.
+ordMin :: Ord a => a -> a -> a
+ordMin = min
+
+-- | This function may be used to derive instances of @Diploid@ for
+--   integral types.
+--   The result is the mean of the two inputs, rounded to the nearest
+--   integer.
+integralMidpoint :: Integral a => a -> a -> a
+integralMidpoint x y = round $ (x' + y')/2
+  where x' = fromIntegral x :: Double
+        y' = fromIntegral y :: Double
+
+-- | This function may be used to derive instances of @Diploid@ for
+--   floating point types.
+--   The result is the mean of the two inputs.
+floatingMidpoint :: (Num a, Fractional a) => a -> a -> a
+floatingMidpoint x y = (x + y)/2
 
 
 {- $Generic

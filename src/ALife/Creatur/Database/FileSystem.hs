@@ -11,35 +11,36 @@
 -- separate file. The name of the file is the record's key.
 --
 ------------------------------------------------------------------------
-{-# LANGUAGE TypeFamilies, FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE TypeFamilies     #-}
 module ALife.Creatur.Database.FileSystem
   (
     FSDatabase,
     mkFSDatabase
   ) where
 
-import Prelude hiding (readFile, writeFile)
+import           Prelude                hiding (readFile, writeFile)
 
-import ALife.Creatur.Database (Database(..), DBRecord, Record, 
-  delete, key, keys, store)
-import ALife.Creatur.Util (modifyLift)
-import Control.Monad (unless, when)
-import Control.Monad.IO.Class (liftIO)
-import Control.Monad.State (StateT, gets)
-import Data.ByteString as BS (readFile, writeFile)
-import qualified Data.Serialize as DS 
-  (Serialize, decode, encode)
-import System.Directory (createDirectoryIfMissing, doesFileExist, 
-  getDirectoryContents, renameFile)
+import           ALife.Creatur.Database (DBRecord, Database (..), Record,
+                                         delete, key, keys, store)
+import           ALife.Creatur.Util     (modifyLift)
+import           Control.Monad          (unless, when)
+import           Control.Monad.IO.Class (liftIO)
+import           Control.Monad.State    (StateT, gets)
+import           Data.ByteString        as BS (readFile, writeFile)
+import qualified Data.Serialize         as DS (Serialize, decode, encode)
+import           System.Directory       (createDirectoryIfMissing,
+                                         doesFileExist, getDirectoryContents,
+                                         renameFile)
 
--- | A simple database where each record is stored in a separate file, 
+-- | A simple database where each record is stored in a separate file,
 --   and the name of the file is the record's key.
 data FSDatabase r = FSDatabase
   {
     initialised :: Bool,
-    mainDir :: FilePath,
-    archiveDir :: FilePath
-  } deriving (Show, Eq)
+    mainDir     :: FilePath,
+    archiveDir  :: FilePath
+  } deriving (Read, Show, Eq)
 
 instance Database (FSDatabase r) where
   type DBRecord (FSDatabase r) = r
@@ -47,7 +48,7 @@ instance Database (FSDatabase r) where
   keys = keysIn mainDir
 
   numRecords = fmap length keys
-  
+
   archivedKeys = keysIn archiveDir
 
   lookup k = k `lookupIn` mainDir
@@ -85,7 +86,7 @@ lookupIn k x = do
     d <- gets x
     let f = d ++ '/':k
     liftIO $ readRecord3 f
-  
+
 -- | @'mkFSDatabase' d@ (re)creates the FSDatabase in the
 --   directory @d@.
 mkFSDatabase :: FilePath -> FSDatabase r
@@ -114,13 +115,13 @@ writeRecord3 f a = do
   let x = DS.encode a
   writeFile f x
 
-writeRecord2 :: (Record r, DS.Serialize r) => 
+writeRecord2 :: (Record r, DS.Serialize r) =>
   (FSDatabase r -> FilePath) -> r -> StateT (FSDatabase r) IO ()
 writeRecord2 dirGetter r = do
   d <- gets dirGetter
   let f = d ++ '/':key r
   liftIO $ writeRecord3 f r
-  -- liftIO $ agentId r ++ " archived to " ++ show f     
+  -- liftIO $ agentId r ++ " archived to " ++ show f
 
 isRecordFileName :: String -> Bool
 isRecordFileName s =

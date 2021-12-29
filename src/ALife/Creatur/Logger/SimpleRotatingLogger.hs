@@ -20,25 +20,25 @@ module ALife.Creatur.Logger.SimpleRotatingLogger
     mkSimpleRotatingLogger
   ) where
 
-import ALife.Creatur.Util (getLift)
-import ALife.Creatur.Logger (Logger(..), timestamp)
-import Control.Conditional (whenM, unlessM)
-import Control.Monad (when)
-import Control.Monad.IO.Class (liftIO)
-import Control.Monad.State (StateT, gets, modify)
-import System.Directory (createDirectoryIfMissing, doesFileExist,
-  renameFile)
+import           ALife.Creatur.Logger   (Logger (..), timestamp)
+import           ALife.Creatur.Util     (getLift)
+import           Control.Conditional    (unlessM, whenM)
+import           Control.Monad          (when)
+import           Control.Monad.IO.Class (liftIO)
+import           Control.Monad.State    (StateT, gets, modify)
+import           System.Directory       (createDirectoryIfMissing,
+                                         doesFileExist, renameFile)
 
 -- | A rotating logger.
 data SimpleRotatingLogger = SimpleRotatingLogger {
-    initialised :: Bool,
-    directory :: FilePath,
-    logFilename :: FilePath,
-    expFilename :: FilePath,
+    initialised       :: Bool,
+    directory         :: FilePath,
+    logFilename       :: FilePath,
+    expFilename       :: FilePath,
     maxRecordsPerFile :: Int,
-    recordCount :: Int,
-    logCount :: Int
-  } deriving (Show, Eq)
+    recordCount       :: Int,
+    logCount          :: Int
+  } deriving (Read, Show, Eq)
 
 -- | @'mkSimpleRotatingLogger' d prefix n@ creates a logger that will write to
 --   directory @d@. The log \"rotates\" (starts a new log file) every @n@

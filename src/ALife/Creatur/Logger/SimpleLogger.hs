@@ -19,19 +19,19 @@ module ALife.Creatur.Logger.SimpleLogger
     mkSimpleLogger
   ) where
 
-import ALife.Creatur.Util (getLift)
-import ALife.Creatur.Logger (Logger(..), timestamp)
-import Control.Conditional (unlessM)
-import Control.Monad.IO.Class (liftIO)
-import Control.Monad.State (StateT, gets, modify)
-import System.Directory (createDirectoryIfMissing)
-import System.FilePath (splitFileName)
+import           ALife.Creatur.Logger   (Logger (..), timestamp)
+import           ALife.Creatur.Util     (getLift)
+import           Control.Conditional    (unlessM)
+import           Control.Monad.IO.Class (liftIO)
+import           Control.Monad.State    (StateT, gets, modify)
+import           System.Directory       (createDirectoryIfMissing)
+import           System.FilePath        (splitFileName)
 
 -- | A rotating logger.
 data SimpleLogger = SimpleLogger {
     initialised :: Bool,
     logFilename :: FilePath
-  } deriving (Show, Eq)
+  } deriving (Read, Show, Eq)
 
 -- | @'mkSimpleLogger' f@ creates a logger that will write to
 --   file @f@.

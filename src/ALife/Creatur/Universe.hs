@@ -72,8 +72,8 @@ import           Control.Monad.Random                    (evalRandIO)
 import           Control.Monad.State                     (StateT, get)
 import           Data.Either                             (partitionEithers)
 import           Data.Serialize                          (Serialize)
-import           GHC.Stack
-    (callStack, prettyCallStack)
+import           GHC.Stack                               (callStack,
+                                                          prettyCallStack)
 
 -- | A habitat containing artificial life.
 class (C.Clock (Clock u), L.Logger (Logger u), D.Database (AgentDB u),
@@ -306,7 +306,7 @@ data SimpleUniverse a = SimpleUniverse
     suDB        :: FS.FSDatabase a,
     suNamer     :: N.SimpleNamer,
     suChecklist :: CL.PersistentChecklist
-  } deriving (Show, Eq)
+  } deriving (Read, Show, Eq)
 
 instance (A.Agent a, D.Record a) => Universe (SimpleUniverse a) where
   type Agent (SimpleUniverse a) = a
@@ -342,7 +342,7 @@ data CachedUniverse a = CachedUniverse
     cuDB        :: CFS.CachedFSDatabase a,
     cuNamer     :: N.SimpleNamer,
     cuChecklist :: CL.PersistentChecklist
-  } deriving (Show, Eq)
+  } deriving (Read, Show, Eq)
 
 instance (A.Agent a, D.SizedRecord a) => Universe (CachedUniverse a) where
   type Agent (CachedUniverse a) = a

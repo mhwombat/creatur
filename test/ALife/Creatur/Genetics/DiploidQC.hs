@@ -33,7 +33,7 @@ import           Control.Applicative
 #endif
 
 data TestStructure = A | B Bool | C Int | D Bool Char | E [TestStructure]
-  deriving (Show, Eq, Generic)
+  deriving (Read, Show, Eq, Generic)
 
 instance Diploid TestStructure
 

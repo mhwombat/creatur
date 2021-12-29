@@ -12,26 +12,30 @@
 -- This module is subject to change without notice.
 --
 ------------------------------------------------------------------------
-{-# LANGUAGE TypeFamilies, FlexibleContexts, ScopedTypeVariables #-}
+{-# LANGUAGE FlexibleContexts    #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeFamilies        #-}
 module ALife.Creatur.Database.CachedFileSystemInternal where
 
-import Prelude hiding (readFile, writeFile, lookup)
+import           Prelude                           hiding (lookup, readFile,
+                                                    writeFile)
 
-import ALife.Creatur.Database (Database(..), DBRecord, Record,
-  SizedRecord, delete, key, keys, store, size)
+import           ALife.Creatur.Database            (DBRecord, Database (..),
+                                                    Record, SizedRecord, delete,
+                                                    key, keys, size, store)
 import qualified ALife.Creatur.Database.FileSystem as FS
-import ALife.Creatur.Util (stateMap)
-import Control.Monad (when)
-import Control.Monad.State (StateT, get, gets, modify)
+import           ALife.Creatur.Util                (stateMap)
+import           Control.Monad                     (when)
+import           Control.Monad.State               (StateT, get, gets, modify)
 
 -- | A simple database where each record is stored in a separate file,
 --   and the name of the file is the record's key.
 data CachedFSDatabase r = CachedFSDatabase
   {
-    database :: FS.FSDatabase r,
-    cache :: [r],
+    database     :: FS.FSDatabase r,
+    cache        :: [r],
     maxCacheSize :: Int
-  } deriving (Show, Eq)
+  } deriving (Read, Show, Eq)
 
 instance (SizedRecord r) => Database (CachedFSDatabase r) where
   type DBRecord (CachedFSDatabase r) = r

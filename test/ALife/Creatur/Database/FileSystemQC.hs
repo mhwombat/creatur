@@ -17,19 +17,19 @@ module ALife.Creatur.Database.FileSystemQC
     test
   ) where
 
-import Prelude hiding (lookup)
-import ALife.Creatur.Database (Record, key, store, lookup)
-import ALife.Creatur.Database.FileSystem (mkFSDatabase)
-import Control.Monad.State (execStateT, evalStateT)
-import Data.Serialize (Serialize)
-import GHC.Generics (Generic)
-import System.IO.Temp (withSystemTempDirectory)
-import Test.Framework as TF (Test, testGroup)
-import Test.HUnit as TH (assertEqual)
-import Test.Framework.Providers.HUnit (testCase)
+import           ALife.Creatur.Database            (Record, key, lookup, store)
+import           ALife.Creatur.Database.FileSystem (mkFSDatabase)
+import           Control.Monad.State               (evalStateT, execStateT)
+import           Data.Serialize                    (Serialize)
+import           GHC.Generics                      (Generic)
+import           Prelude                           hiding (lookup)
+import           System.IO.Temp                    (withSystemTempDirectory)
+import           Test.Framework                    as TF (Test, testGroup)
+import           Test.Framework.Providers.HUnit    (testCase)
+import           Test.HUnit                        as TH (assertEqual)
 
 data TestRecord = TestRecord String Int
-  deriving (Show, Eq, Generic)
+  deriving (Read, Show, Eq, Generic)
 
 instance Record TestRecord where
   key (TestRecord k _) = k

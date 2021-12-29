@@ -40,7 +40,7 @@ prop_round_trippable g = g' == Right g
         g' = read x
 
 data TestStructure = A | B Bool | C Word8 | D Word16 Char | E [TestStructure]
-  deriving (Show, Eq, Generic)
+  deriving (Read, Show, Eq, Generic)
 
 instance Genetic TestStructure
 instance Analysable TestStructure

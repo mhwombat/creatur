@@ -17,19 +17,19 @@ module ALife.Creatur.ChecklistQC
     test
   ) where
 
-import qualified ALife.Creatur as A
-import ALife.Creatur.Database (Record, key)
-import ALife.Creatur.Checklist
-import Control.Monad.State (execStateT, evalStateT)
-import Data.Serialize (Serialize)
-import GHC.Generics (Generic)
-import System.IO.Temp (withSystemTempDirectory)
-import Test.Framework as TF (Test, testGroup)
-import Test.HUnit as TH (assertEqual, assertBool)
-import Test.Framework.Providers.HUnit (testCase)
+import qualified ALife.Creatur                  as A
+import           ALife.Creatur.Checklist
+import           ALife.Creatur.Database         (Record, key)
+import           Control.Monad.State            (evalStateT, execStateT)
+import           Data.Serialize                 (Serialize)
+import           GHC.Generics                   (Generic)
+import           System.IO.Temp                 (withSystemTempDirectory)
+import           Test.Framework                 as TF (Test, testGroup)
+import           Test.Framework.Providers.HUnit (testCase)
+import           Test.HUnit                     as TH (assertBool, assertEqual)
 
 data TestAgent = TestAgent { aAgentId :: String, aIsAlive :: Bool }
-  deriving (Eq, Show, Generic)
+  deriving (Eq, Read, Show, Generic)
 
 instance Serialize TestAgent
 

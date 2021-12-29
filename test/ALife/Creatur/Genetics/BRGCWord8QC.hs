@@ -56,7 +56,7 @@ prop_rawWord8s_round_trippable g = g' == g
         n = length g
 
 data TestStructure = A | B Bool | C Word8 | D Word16 Char | E [TestStructure]
-  deriving (Show, Eq, Generic)
+  deriving (Read, Show, Eq, Generic)
 
 instance Genetic TestStructure
 instance Analysable TestStructure

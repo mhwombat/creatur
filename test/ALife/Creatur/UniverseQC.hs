@@ -17,20 +17,22 @@ module ALife.Creatur.UniverseQC
     test
   ) where
 
-import qualified ALife.Creatur as A
-import ALife.Creatur.Database (Record, key)
-import ALife.Creatur.Universe
-import Control.Monad.State (execStateT, evalStateT, runStateT)
-import Data.Serialize (Serialize)
-import GHC.Generics (Generic)
-import System.Directory (doesFileExist, doesDirectoryExist)
-import System.IO.Temp (withSystemTempDirectory)
-import Test.Framework as TF (Test, testGroup)
-import Test.HUnit as TH (assertEqual, assertBool)
-import Test.Framework.Providers.HUnit (testCase)
+import qualified ALife.Creatur                  as A
+import           ALife.Creatur.Database         (Record, key)
+import           ALife.Creatur.Universe
+import           Control.Monad.State            (evalStateT, execStateT,
+                                                 runStateT)
+import           Data.Serialize                 (Serialize)
+import           GHC.Generics                   (Generic)
+import           System.Directory               (doesDirectoryExist,
+                                                 doesFileExist)
+import           System.IO.Temp                 (withSystemTempDirectory)
+import           Test.Framework                 as TF (Test, testGroup)
+import           Test.Framework.Providers.HUnit (testCase)
+import           Test.HUnit                     as TH (assertBool, assertEqual)
 
 data TestAgent = TestAgent { aAgentId :: String, aIsAlive :: Bool }
-  deriving (Eq, Show, Generic)
+  deriving (Eq, Read, Show, Generic)
 
 instance Serialize TestAgent
 

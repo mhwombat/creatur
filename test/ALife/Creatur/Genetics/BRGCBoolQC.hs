@@ -25,7 +25,7 @@ import           GHC.Generics                         (Generic)
 import           Prelude                              hiding (read)
 import           Test.Framework                       as TF (Test, testGroup)
 import           Test.Framework.Providers.QuickCheck2 (testProperty)
-import           Test.QuickCheck                      (Arbitrary, Gen, Property,
+import           Test.QuickCheck                      (Arbitrary, Gen,
                                                        arbitrary, choose, oneof,
                                                        sized, vectorOf)
 
@@ -40,7 +40,7 @@ prop_round_trippable g = g' == Right g
         g' = read x
 
 data TestStructure = A | B Bool | C Word8 | D Word16 Char | E [TestStructure]
-  deriving (Show, Eq, Generic)
+  deriving (Read, Show, Eq, Generic)
 
 instance Genetic TestStructure
 instance Analysable TestStructure
