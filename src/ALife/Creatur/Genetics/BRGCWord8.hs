@@ -19,13 +19,12 @@
 -- next are the result of mutation alone.
 --
 ------------------------------------------------------------------------
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE DefaultSignatures #-}
+{-# LANGUAGE DefaultSignatures   #-}
+{-# LANGUAGE FlexibleContexts    #-}
+{-# LANGUAGE FlexibleInstances   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE CPP #-}
+{-# LANGUAGE TypeFamilies        #-}
+{-# LANGUAGE TypeOperators       #-}
 module ALife.Creatur.Genetics.BRGCWord8
   (
     Genetic(..),
@@ -54,25 +53,21 @@ module ALife.Creatur.Genetics.BRGCWord8
     getRawWord8s
   ) where
 
-import Prelude hiding (read)
-import ALife.Creatur.Genetics.Diploid (Diploid, express)
-import ALife.Creatur.Util (fromEither)
-import Codec.Gray (integralToGray, grayToIntegral)
-import Control.Monad (replicateM)
-import Control.Monad.State.Lazy (StateT, runState, execState, evalState)
-import qualified Control.Monad.State.Lazy as S (put, get, gets)
-import Data.Binary (Binary, encode, decode)
-import Data.ByteString.Lazy (pack, unpack)
-import Data.Char (ord, chr)
-import Data.Either (partitionEithers)
-import Data.Functor.Identity (Identity)
-import Data.Word (Word8, Word16, Word32, Word64)
-import GHC.Generics
-
-#if MIN_VERSION_base(4,8,0)
-#else
-import Control.Applicative
-#endif
+import           ALife.Creatur.Genetics.Diploid (Diploid, express)
+import           ALife.Creatur.Util             (fromEither)
+import           Codec.Gray                     (grayToIntegral, integralToGray)
+import           Control.Monad                  (replicateM)
+import           Control.Monad.State.Lazy       (StateT, evalState, execState,
+                                                 runState)
+import qualified Control.Monad.State.Lazy       as S (get, gets, put)
+import           Data.Binary                    (Binary, decode, encode)
+import           Data.ByteString.Lazy           (pack, unpack)
+import           Data.Char                      (chr, ord)
+import           Data.Either                    (partitionEithers)
+import           Data.Functor.Identity          (Identity)
+import           Data.Word                      (Word16, Word32, Word64, Word8)
+import           GHC.Generics
+import           Prelude                        hiding (read)
 
 type Sequence = [Word8]
 
@@ -299,7 +294,7 @@ integralToBytes n x = f n x []
 
 bytesToIntegral :: Integral t => [Word8] -> t
 bytesToIntegral bs = f (bs, 0)
-  where f ([], n) = n
+  where f ([], n)   = n
         f (k:ks, n) = f (ks, n*0x100 + fromIntegral k)
 
 integralToByteArray :: (Integral t, Binary t) => t -> [Word8]

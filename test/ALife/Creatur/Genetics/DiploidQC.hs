@@ -10,7 +10,6 @@
 -- QuickCheck tests.
 --
 ------------------------------------------------------------------------
-{-# LANGUAGE CPP               #-}
 {-# LANGUAGE DeriveGeneric     #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
@@ -26,11 +25,6 @@ import           Test.Framework.Providers.QuickCheck2 (testProperty)
 import           Test.QuickCheck                      (Arbitrary, Gen,
                                                        arbitrary, choose, oneof,
                                                        sized, vectorOf)
-
-#if MIN_VERSION_base(4,8,0)
-#else
-import           Control.Applicative
-#endif
 
 data TestStructure = A | B Bool | C Int | D Bool Char | E [TestStructure]
   deriving (Read, Show, Eq, Generic)

@@ -10,7 +10,6 @@
 -- QuickCheck tests.
 --
 ------------------------------------------------------------------------
-{-# LANGUAGE CPP               #-}
 {-# LANGUAGE DeriveGeneric     #-}
 {-# LANGUAGE FlexibleInstances #-}
 module ALife.Creatur.Genetics.BRGCBoolQC
@@ -28,11 +27,6 @@ import           Test.Framework.Providers.QuickCheck2 (testProperty)
 import           Test.QuickCheck                      (Arbitrary, Gen,
                                                        arbitrary, choose, oneof,
                                                        sized, vectorOf)
-
-#if MIN_VERSION_base(4,8,0)
-#else
-import           Control.Applicative
-#endif
 
 prop_round_trippable :: (Eq g, Genetic g) => g -> Bool
 prop_round_trippable g = g' == Right g

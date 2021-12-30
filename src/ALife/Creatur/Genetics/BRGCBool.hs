@@ -19,12 +19,11 @@
 -- next are the result of mutation alone.
 --
 ------------------------------------------------------------------------
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE DefaultSignatures #-}
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE CPP #-}
+{-# LANGUAGE FlexibleContexts  #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE TypeFamilies      #-}
+{-# LANGUAGE TypeOperators     #-}
 module ALife.Creatur.Genetics.BRGCBool
   (
     Genetic(..),
@@ -47,23 +46,19 @@ module ALife.Creatur.Genetics.BRGCBool
     consumed2
   ) where
 
-import Prelude hiding (read)
-import ALife.Creatur.Genetics.Diploid (Diploid, express)
-import ALife.Creatur.Util (fromEither)
-import Codec.Gray (integralToGray, grayToIntegral)
-import Control.Monad (replicateM)
-import Control.Monad.State.Lazy (StateT, runState, execState, evalState)
-import qualified Control.Monad.State.Lazy as S (put, get, gets)
-import Data.Char (ord, chr, intToDigit)
-import Data.Functor.Identity (Identity)
-import Data.Word (Word8, Word16)
-import GHC.Generics
-import Numeric (showIntAtBase)
-
-#if MIN_VERSION_base(4,8,0)
-#else
-import Control.Applicative
-#endif
+import           ALife.Creatur.Genetics.Diploid (Diploid, express)
+import           ALife.Creatur.Util             (fromEither)
+import           Codec.Gray                     (grayToIntegral, integralToGray)
+import           Control.Monad                  (replicateM)
+import           Control.Monad.State.Lazy       (StateT, evalState, execState,
+                                                 runState)
+import qualified Control.Monad.State.Lazy       as S (get, gets, put)
+import           Data.Char                      (chr, intToDigit, ord)
+import           Data.Functor.Identity          (Identity)
+import           Data.Word                      (Word16, Word8)
+import           GHC.Generics
+import           Numeric                        (showIntAtBase)
+import           Prelude                        hiding (read)
 
 type Sequence = [Bool]
 
@@ -120,7 +115,7 @@ class Genetic g where
   getWithName s = do
     g0 <- get
     return $ case g0 of
-               (Left xs) -> Left ((s ++ ":"):xs)
+               (Left xs)  -> Left ((s ++ ":"):xs)
                (Right g1) -> Right g1
 
 class GGenetic f where
@@ -149,7 +144,7 @@ instance (GGenetic a, GGenetic b) => GGenetic (a :+: b) where
     case a of
       Right True  -> fmap (fmap L1) gget
       Right False -> fmap (fmap R1) gget
-      Left s -> return (Left s)
+      Left s      -> return (Left s)
 
 -- | Sums: encode choice between constructors
 instance (GGenetic a) => GGenetic (M1 i c a) where
@@ -225,7 +220,7 @@ intToBools nBits x =
 boolsToInt :: Integral a => [Bool] -> a
 boolsToInt bs = f 0 ns
   where ns = map (\x -> if x then 1 else 0) bs
-        f i [] = i
+        f i []     = i
         f i (j:js) = f (i*2+j) js
 
 --
