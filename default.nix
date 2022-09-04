@@ -1,9 +1,11 @@
-let 
+let
   pkgs = import <nixpkgs> { };
-in 
+in
   pkgs.haskellPackages.developPackage {
     root = ./.;
-    source-overrides = {
-      gray-extended = ../gray-extended;
-    };
+        modifier = drv:
+          pkgs.haskell.lib.addBuildTools drv (with pkgs.haskellPackages;
+            [
+              cabal-install
+            ]);
   }

@@ -1,6 +1,8 @@
 # misc
 *.lock
 *~
+.envrc
+.textadept_session
 
 # nix
 result

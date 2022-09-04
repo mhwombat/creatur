@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------
 -- |
 -- Module      :  ALife.Creatur.Database.FileSystem
--- Copyright   :  (c) 2012-2021 Amy de Buitléir
+-- Copyright   :  (c) 2012-2022 Amy de Buitléir
 -- License     :  BSD-style
 -- Maintainer  :  amy@nualeargais.ie
 -- Stability   :  experimental
